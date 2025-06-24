@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId      String        @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String?       @unique
+  createdAt   DateTime      @default(now())
+  isArchived  Boolean       @default(false)
+  password    String
+
+  roles       UserRoles[]
+  distributor Distributor?
+  departments Department[]  @relation("TrainerDepartments")
+  showsCreated Show[]       @relation("ShowCreator")
+  logsBy      Log[]         @relation("ActionBy")
+  logsFrom    Log[]         @relation("FromUser")
+  logsTo      Log[]         @relation("ToUser")
+  remittanceHistory RemittanceHistory[] @relation("RemittedTo")
+
+  @@unique([firstName, lastName], name: "fullName")
+}
+
+model Roles {
+  roleId Int     @id @default(autoincrement())
+  name   Role    @unique
+  users  UserRoles[]
+}
+
+model UserRoles {
+  userId String
+  roleId Int
+
+  user User  @relation(fields: [userId], references: [userId])
+  role Roles @relation(fields: [roleId], references: [roleId])
+
+  @@id([userId, roleId])
+}
+
+model DistributorTypes {
+  id             Int           @id @default(autoincrement())
+  name           String        @unique
+  haveCommission Boolean
+  distributors   Distributor[]
+}
+
+model Department {
+  departmentId Int         @id @default(autoincrement())
+  name         String      @unique
+  trainerId    String
+
+  trainer      User        @relation("TrainerDepartments", fields: [trainerId], references: [userId])
+  distributors Distributor[]
+  shows        Show[]
+}
+
+model Distributor {
+  userId            String @unique
+  distributorTypeId Int
+  departmentId      Int?
+  contactNumber     String
+
+  user             User             @relation(fields: [userId], references: [userId])
+  distributorType  DistributorTypes @relation(fields: [distributorTypeId], references: [id])
+  department       Department?      @relation(fields: [departmentId], references: [departmentId])
+  tickets          Ticket[]
+  remittances      RemittanceHistory[] @relation("RemittedBy")
+
+  @@id([userId, distributorTypeId])
+}
+
+model Show {
+  showId        Int           @id @default(autoincrement())
+  showCoverURL  String
+  title         String
+  description   String
+  price         Float
+  commisionFee  Float
+  showType      ShowType
+  departmentId  Int
+  createdBy     String
+  createdAt     DateTime      @default(now())
+  isArchived    Boolean       @default(false)
+
+  department    Department    @relation(fields: [departmentId], references: [departmentId])
+  creator       User          @relation("ShowCreator", fields: [createdBy], references: [userId])
+  genres        ShowGenre[]
+  schedules     ShowSchedule[]
+}
+
+model Genre {
+  genreId Int          @id @default(autoincrement())
+  name    String       @unique
+  shows   ShowGenre[]
+}
+
+model ShowGenre {
+  showId  Int
+  genreId Int
+
+  show  Show  @relation(fields: [showId], references: [showId])
+  genre Genre @relation(fields: [genreId], references: [genreId])
+
+  @@id([showId, genreId])
+}
+
+model ShowSchedule {
+  scheduleId    Int          @id @default(autoincrement())
+  showId        Int
+  date          DateTime
+  time          String
+  isOpen        Boolean      @default(true)
+  isArchived    Boolean      @default(false)
+  isRescheduled Boolean      @default(false)
+  oldSchedule   String?
+
+  show       Show              @relation(fields: [showId], references: [showId])
+  seats      ShowSeat[]
+  tickets    Ticket[]
+  remittances RemittanceHistory[]
+}
+
+model ShowSeat {
+  scheduleId  Int
+  seatNumber  String
+  seatSection String     // orchestra, balcony
+  status      String     // reserved, vip, available
+
+  schedule    ShowSchedule @relation(fields: [scheduleId], references: [scheduleId])
+
+  @@id([scheduleId, seatNumber])
+}
+
+model Ticket {
+  controlNumber String
+  scheduleId    Int
+  status        String
+  distributorId String
+
+  schedule    ShowSchedule @relation(fields: [scheduleId], references: [scheduleId])
+  distributor Distributor  @relation(fields: [distributorId], references: [userId])
+  remittances RemittanceHistory[] @relation("TicketRemittance")
+
+  @@id([controlNumber, scheduleId])
+}
+
+model RemittanceHistory {
+  controlNumber   String
+  scheduleId      Int
+  remittedBy      String
+  remittedTo      String
+  totalRemittance Float
+  commission      Float
+  dateRemitted    DateTime
+
+  ticket   Ticket        @relation("TicketRemittance", fields: [controlNumber, scheduleId], references: [controlNumber, scheduleId])
+  schedule ShowSchedule  @relation(fields: [scheduleId], references: [scheduleId])
+  distributor Distributor @relation("RemittedBy", fields: [remittedBy], references: [userId])
+  receiver    User        @relation("RemittedTo", fields: [remittedTo], references: [userId])
+
+  @@id([controlNumber, scheduleId])
+}
+
+model Log {
+  logId       Int       @id @default(autoincrement())
+  logType     Int
+  actionBy    String
+  logDateTime DateTime  @default(now())
+  fromUserId  String?
+  toUserId    String?
+  description String
+
+  logTypeData LogType   @relation(fields: [logType], references: [typeId])
+  actionUser  User      @relation("ActionBy", fields: [actionBy], references: [userId])
+  fromUser    User?     @relation("FromUser", fields: [fromUserId], references: [userId])
+  toUser      User?     @relation("ToUser", fields: [toUserId], references: [userId])
+}
+
+model LogType {
+  typeId Int     @id @default(autoincrement())
+  name   String  @unique
+  logs   Log[]
+}
+
+enum ShowType {
+  MajorConcert
+  ShowCase
+  MajorProduction
+}
+
+enum Role {
+  Trainer
+  Distributor
+  Head
+}
+
