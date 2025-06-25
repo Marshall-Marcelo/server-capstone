@@ -8,197 +8,277 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  userId      String        @id @default(uuid())
-  firstName   String
-  lastName    String
-  email       String?       @unique
-  createdAt   DateTime      @default(now())
-  isArchived  Boolean       @default(false)
-  password    String
+model allocatedtickets {
+  allocationLogId String        @db.VarChar(36)
+  ticketId        String        @db.VarChar(36)
+  allocationlog   allocationlog @relation(fields: [allocationLogId], references: [allocationLogId], onDelete: Cascade, onUpdate: NoAction, map: "allocatedtickets_ibfk_1")
+  ticket          ticket        @relation(fields: [ticketId], references: [ticketId], onDelete: Cascade, onUpdate: NoAction, map: "allocatedtickets_ibfk_2")
 
-  roles       UserRoles[]
-  distributor Distributor?
-  departments Department[]  @relation("TrainerDepartments")
-  showsCreated Show[]       @relation("ShowCreator")
-  logsBy      Log[]         @relation("ActionBy")
-  logsFrom    Log[]         @relation("FromUser")
-  logsTo      Log[]         @relation("ToUser")
-  remittanceHistory RemittanceHistory[] @relation("RemittedTo")
-
-  @@unique([firstName, lastName], name: "fullName")
+  @@id([allocationLogId, ticketId])
+  @@index([ticketId], map: "ticketId")
 }
 
-model Roles {
-  roleId Int     @id @default(autoincrement())
-  name   Role    @unique
-  users  UserRoles[]
+model allocationlog {
+  allocationLogId                          String             @id @db.VarChar(36)
+  scheduleId                               Int
+  distributorId                            String             @db.VarChar(36)
+  allocatedBy                              String             @db.VarChar(36)
+  dateAllocated                            DateTime?          @default(now()) @db.Timestamp(0)
+  allocatedtickets                         allocatedtickets[]
+  showschedules                            showschedules      @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "allocationlog_ibfk_1")
+  users_allocationlog_distributorIdTousers users              @relation("allocationlog_distributorIdTousers", fields: [distributorId], references: [userId], onUpdate: NoAction, map: "allocationlog_ibfk_2")
+  users_allocationlog_allocatedByTousers   users              @relation("allocationlog_allocatedByTousers", fields: [allocatedBy], references: [userId], onUpdate: NoAction, map: "allocationlog_ibfk_3")
+
+  @@index([allocatedBy], map: "allocatedBy")
+  @@index([distributorId], map: "distributorId")
+  @@index([scheduleId], map: "scheduleId")
 }
 
-model UserRoles {
-  userId String
-  roleId Int
+model department {
+  departmentId String        @id @db.VarChar(36)
+  name         String?       @db.VarChar(100)
+  trainerId    String?       @db.VarChar(36)
+  users        users?        @relation(fields: [trainerId], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "department_ibfk_1")
+  distributor  distributor[]
+  shows        shows[]
 
-  user User  @relation(fields: [userId], references: [userId])
-  role Roles @relation(fields: [roleId], references: [roleId])
-
-  @@id([userId, roleId])
+  @@index([trainerId], map: "trainerId")
 }
 
-model DistributorTypes {
-  id             Int           @id @default(autoincrement())
-  name           String        @unique
-  haveCommission Boolean
-  distributors   Distributor[]
+model distributor {
+  userId            String            @id @db.VarChar(36)
+  distributorTypeId Int?
+  departmentId      String?           @db.VarChar(36)
+  contactNumber     String?           @db.VarChar(20)
+  users             users             @relation(fields: [userId], references: [userId], onUpdate: NoAction, map: "distributor_ibfk_1")
+  distributortypes  distributortypes? @relation(fields: [distributorTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "distributor_ibfk_2")
+  department        department?       @relation(fields: [departmentId], references: [departmentId], onDelete: NoAction, onUpdate: NoAction, map: "distributor_ibfk_3")
+
+  @@index([departmentId], map: "departmentId")
+  @@index([distributorTypeId], map: "distributorTypeId")
 }
 
-model Department {
-  departmentId Int         @id @default(autoincrement())
-  name         String      @unique
-  trainerId    String
-
-  trainer      User        @relation("TrainerDepartments", fields: [trainerId], references: [userId])
-  distributors Distributor[]
-  shows        Show[]
+model distributortypes {
+  id            Int           @id @default(autoincrement())
+  name          String?       @db.VarChar(100)
+  haveCommision Boolean?
+  distributor   distributor[]
 }
 
-model Distributor {
-  userId            String @unique
-  distributorTypeId Int
-  departmentId      Int?
-  contactNumber     String
-
-  user             User             @relation(fields: [userId], references: [userId])
-  distributorType  DistributorTypes @relation(fields: [distributorTypeId], references: [id])
-  department       Department?      @relation(fields: [departmentId], references: [departmentId])
-  tickets          Ticket[]
-  remittances      RemittanceHistory[] @relation("RemittedBy")
-
-  @@id([userId, distributorTypeId])
+model genre {
+  genreId   Int         @id @default(autoincrement())
+  name      String?     @db.VarChar(100)
+  showgenre showgenre[]
 }
 
-model Show {
-  showId        Int           @id @default(autoincrement())
-  showCoverURL  String
-  title         String
-  description   String
-  price         Float
-  commisionFee  Float
-  showType      ShowType
-  departmentId  Int
-  createdBy     String
-  createdAt     DateTime      @default(now())
-  isArchived    Boolean       @default(false)
+model notifications {
+  notificationId                        String              @id @db.VarChar(36)
+  senderId                              String?             @db.VarChar(36)
+  receiverId                            String?             @db.VarChar(36)
+  type                                  notifications_type?
+  message                               String?             @db.Text
+  isRead                                Boolean?            @default(false)
+  sentAt                                DateTime?           @default(now()) @db.Timestamp(0)
+  users_notifications_senderIdTousers   users?              @relation("notifications_senderIdTousers", fields: [senderId], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "notifications_ibfk_1")
+  users_notifications_receiverIdTousers users?              @relation("notifications_receiverIdTousers", fields: [receiverId], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "notifications_ibfk_2")
 
-  department    Department    @relation(fields: [departmentId], references: [departmentId])
-  creator       User          @relation("ShowCreator", fields: [createdBy], references: [userId])
-  genres        ShowGenre[]
-  schedules     ShowSchedule[]
+  @@index([receiverId], map: "receiverId")
+  @@index([senderId], map: "senderId")
 }
 
-model Genre {
-  genreId Int          @id @default(autoincrement())
-  name    String       @unique
-  shows   ShowGenre[]
+model remittancehistory {
+  remittanceId                              String            @id @db.VarChar(36)
+  scheduleId                                Int?
+  remittedBy                                String?           @db.VarChar(36)
+  receivedBy                                String?           @db.VarChar(36)
+  totalRemittance                           Decimal?          @db.Decimal(10, 2)
+  commission                                Decimal?          @db.Decimal(10, 2)
+  dateRemitted                              DateTime?         @default(now()) @db.Timestamp(0)
+  remarks                                   String?           @db.Text
+  showschedules                             showschedules?    @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "remittancehistory_ibfk_1")
+  users_remittancehistory_remittedByTousers users?            @relation("remittancehistory_remittedByTousers", fields: [remittedBy], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "remittancehistory_ibfk_2")
+  users_remittancehistory_receivedByTousers users?            @relation("remittancehistory_receivedByTousers", fields: [receivedBy], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "remittancehistory_ibfk_3")
+  remittedtickets                           remittedtickets[]
+
+  @@index([receivedBy], map: "receivedBy")
+  @@index([remittedBy], map: "remittedBy")
+  @@index([scheduleId], map: "scheduleId")
 }
 
-model ShowGenre {
-  showId  Int
+model remittedtickets {
+  remittanceId      String            @db.VarChar(36)
+  ticketId          String            @db.VarChar(36)
+  remittancehistory remittancehistory @relation(fields: [remittanceId], references: [remittanceId], onDelete: Cascade, onUpdate: NoAction, map: "remittedtickets_ibfk_1")
+  ticket            ticket            @relation(fields: [ticketId], references: [ticketId], onDelete: Cascade, onUpdate: NoAction, map: "remittedtickets_ibfk_2")
+
+  @@id([remittanceId, ticketId])
+  @@index([ticketId], map: "ticketId")
+}
+
+model reservations {
+  reservationId     String         @id @db.VarChar(36)
+  scheduleId        Int?
+  customerFirstName String?        @db.VarChar(100)
+  customerLastName  String?        @db.VarChar(100)
+  email             String?        @db.VarChar(150)
+  contactNumber     String?        @db.VarChar(20)
+  status            String?        @db.VarChar(50)
+  reservedAt        DateTime?      @default(now()) @db.Timestamp(0)
+  showschedules     showschedules? @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "reservations_ibfk_1")
+  ticket            ticket[]
+
+  @@index([scheduleId], map: "scheduleId")
+}
+
+model seatmapmetadata {
+  id            Int             @id @default(autoincrement())
+  metadata      Json?
+  showschedules showschedules[]
+}
+
+model showgenre {
+  showId  String @db.VarChar(36)
   genreId Int
-
-  show  Show  @relation(fields: [showId], references: [showId])
-  genre Genre @relation(fields: [genreId], references: [genreId])
+  shows   shows  @relation(fields: [showId], references: [showId], onDelete: Cascade, onUpdate: NoAction, map: "showgenre_ibfk_1")
+  genre   genre  @relation(fields: [genreId], references: [genreId], onDelete: NoAction, onUpdate: NoAction, map: "showgenre_ibfk_2")
 
   @@id([showId, genreId])
+  @@index([genreId], map: "genreId")
 }
 
-model ShowSchedule {
-  scheduleId    Int          @id @default(autoincrement())
-  showId        Int
-  date          DateTime
-  time          String
-  isOpen        Boolean      @default(true)
-  isArchived    Boolean      @default(false)
-  isRescheduled Boolean      @default(false)
-  oldSchedule   String?
+model shows {
+  showId        String          @id @db.VarChar(36)
+  title         String?         @db.VarChar(255)
+  description   String?         @db.Text
+  showType      shows_showType?
+  departmentId  String?         @db.VarChar(36)
+  createdBy     String?         @db.VarChar(36)
+  createdAt     DateTime?       @default(now()) @db.Timestamp(0)
+  isArchived    Boolean?        @default(false)
+  showgenre     showgenre[]
+  department    department?     @relation(fields: [departmentId], references: [departmentId], onDelete: NoAction, onUpdate: NoAction, map: "shows_ibfk_1")
+  users         users?          @relation(fields: [createdBy], references: [userId], onDelete: Cascade, onUpdate: NoAction, map: "shows_ibfk_2")
+  showschedules showschedules[]
 
-  show       Show              @relation(fields: [showId], references: [showId])
-  seats      ShowSeat[]
-  tickets    Ticket[]
-  remittances RemittanceHistory[]
+  @@index([createdBy], map: "createdBy")
+  @@index([departmentId], map: "departmentId")
 }
 
-model ShowSeat {
-  scheduleId  Int
-  seatNumber  String
-  seatSection String     // orchestra, balcony
-  status      String     // reserved, vip, available
+model showschedules {
+  scheduleId        Int                 @id @default(autoincrement())
+  showId            String?             @db.VarChar(36)
+  date              DateTime?           @db.Date
+  time              DateTime?           @db.Time(0)
+  isOpen            Boolean?            @default(true)
+  commissionFee     Decimal?            @db.Decimal(10, 2)
+  isArchived        Boolean?            @default(false)
+  isRescheduled     Boolean?            @default(false)
+  isFreeSeating     Boolean?            @default(false)
+  isNonTicketed     Boolean?            @default(false)
+  contactNumber     String?             @db.VarChar(20)
+  facebookLink      String?             @db.VarChar(255)
+  femaleCount       Int?                @default(0)
+  maleCount         Int?                @default(0)
+  seatMetaDataId    Int?
+  allocationlog     allocationlog[]
+  remittancehistory remittancehistory[]
+  reservations      reservations[]
+  shows             shows?              @relation(fields: [showId], references: [showId], onDelete: Cascade, onUpdate: NoAction, map: "showschedules_ibfk_1")
+  seatmapmetadata   seatmapmetadata?    @relation(fields: [seatMetaDataId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "showschedules_ibfk_2")
+  showseats         showseats[]
+  ticket            ticket[]
 
-  schedule    ShowSchedule @relation(fields: [scheduleId], references: [scheduleId])
+  @@index([showId], map: "showId")
+  @@index([seatMetaDataId], map: "seatMetaDataId")
+}
+
+model showseats {
+  scheduleId    Int
+  seatNumber    String            @db.VarChar(10)
+  seatSection   String?           @db.VarChar(100)
+  seatPosition  Json?
+  status        showseats_status? @default(available)
+  showschedules showschedules     @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "showseats_ibfk_1")
 
   @@id([scheduleId, seatNumber])
 }
 
-model Ticket {
-  controlNumber String
-  scheduleId    Int
-  status        String
-  distributorId String
+model ticket {
+  ticketId           String             @id @db.VarChar(36)
+  controlNumber      Int?               @unique(map: "controlNumber")
+  scheduleId         Int?
+  ticketPrice        Decimal?           @db.Decimal(10, 2)
+  discountPercentage Decimal?           @db.Decimal(5, 2)
+  status             ticket_status?
+  seatNumber         String?            @db.VarChar(10)
+  distributorId      String?            @db.VarChar(36)
+  reservationId      String?            @db.VarChar(36)
+  isComplimentary    Boolean?           @default(false)
+  buyerEmail         String?            @db.VarChar(150)
+  buyerName          String?            @db.VarChar(150)
+  allocatedtickets   allocatedtickets[]
+  remittedtickets    remittedtickets[]
+  showschedules      showschedules?     @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "ticket_ibfk_1")
+  users              users?             @relation(fields: [distributorId], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "ticket_ibfk_2")
+  reservations       reservations?      @relation(fields: [reservationId], references: [reservationId], onUpdate: NoAction, map: "ticket_ibfk_3")
 
-  schedule    ShowSchedule @relation(fields: [scheduleId], references: [scheduleId])
-  distributor Distributor  @relation(fields: [distributorId], references: [userId])
-  remittances RemittanceHistory[] @relation("TicketRemittance")
-
-  @@id([controlNumber, scheduleId])
+  @@index([distributorId], map: "distributorId")
+  @@index([reservationId], map: "reservationId")
+  @@index([scheduleId], map: "scheduleId")
 }
 
-model RemittanceHistory {
-  controlNumber   String
-  scheduleId      Int
-  remittedBy      String
-  remittedTo      String
-  totalRemittance Float
-  commission      Float
-  dateRemitted    DateTime
-
-  ticket   Ticket        @relation("TicketRemittance", fields: [controlNumber, scheduleId], references: [controlNumber, scheduleId])
-  schedule ShowSchedule  @relation(fields: [scheduleId], references: [scheduleId])
-  distributor Distributor @relation("RemittedBy", fields: [remittedBy], references: [userId])
-  receiver    User        @relation("RemittedTo", fields: [remittedTo], references: [userId])
-
-  @@id([controlNumber, scheduleId])
+model users {
+  userId                                                String              @id @db.VarChar(36)
+  firstName                                             String?             @db.VarChar(100)
+  lastName                                              String?             @db.VarChar(100)
+  email                                                 String?             @unique(map: "email") @db.VarChar(150)
+  password                                              String?             @db.VarChar(255)
+  createdAt                                             DateTime?           @default(now()) @db.Timestamp(0)
+  isArchived                                            Boolean?            @default(false)
+  isLocked                                              Boolean?            @default(false)
+  role                                                  users_role?         @default(none)
+  allocationlog_allocationlog_distributorIdTousers      allocationlog[]     @relation("allocationlog_distributorIdTousers")
+  allocationlog_allocationlog_allocatedByTousers        allocationlog[]     @relation("allocationlog_allocatedByTousers")
+  department                                            department[]
+  distributor                                           distributor?
+  notifications_notifications_senderIdTousers           notifications[]     @relation("notifications_senderIdTousers")
+  notifications_notifications_receiverIdTousers         notifications[]     @relation("notifications_receiverIdTousers")
+  remittancehistory_remittancehistory_remittedByTousers remittancehistory[] @relation("remittancehistory_remittedByTousers")
+  remittancehistory_remittancehistory_receivedByTousers remittancehistory[] @relation("remittancehistory_receivedByTousers")
+  shows                                                 shows[]
+  ticket                                                ticket[]
 }
 
-model Log {
-  logId       Int       @id @default(autoincrement())
-  logType     Int
-  actionBy    String
-  logDateTime DateTime  @default(now())
-  fromUserId  String?
-  toUserId    String?
-  description String
-
-  logTypeData LogType   @relation(fields: [logType], references: [typeId])
-  actionUser  User      @relation("ActionBy", fields: [actionBy], references: [userId])
-  fromUser    User?     @relation("FromUser", fields: [fromUserId], references: [userId])
-  toUser      User?     @relation("ToUser", fields: [toUserId], references: [userId])
+enum notifications_type {
+  distributorToCCA
+  reservationReminder
+  general
 }
 
-model LogType {
-  typeId Int     @id @default(autoincrement())
-  name   String  @unique
-  logs   Log[]
+enum shows_showType {
+  showCase
+  majorConcert
+  majorProduction
 }
 
-enum ShowType {
-  MajorConcert
-  ShowCase
-  MajorProduction
+enum showseats_status {
+  reserved
+  vip
+  available
+  sold
+  complimentarySeat
 }
 
-enum Role {
-  Trainer
-  Distributor
-  Head
+enum ticket_status {
+  remitted
+  sold
+  lost
+  not_allocated
+  allocated
 }
 
+enum users_role {
+  head
+  trainer
+  none
+}

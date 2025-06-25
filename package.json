@@ -12,11 +12,13 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@prisma/client": "^6.10.1",
+    "i": "^0.3.7",
     "nodemon": "^3.1.10",
-    "prisma": "^6.9.0"
+    "npm": "^11.4.2",
+    "prisma": "^6.10.1"
   },
   "dependencies": {
-    "@prisma/client": "^6.9.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
