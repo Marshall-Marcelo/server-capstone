@@ -1,9 +1,10 @@
 import express from "express";
-import { createTrainerController } from "../controller/auth.controller.js";
+import { createCCAController, ccaLoginController } from "../controller/auth.controller.js";
 
 export const router = express.Router();
 
-router.post("/newTrainer", createTrainerController);
+router.post("/newCCA", createCCAController);
+router.post("/ccaLogin", ccaLoginController);
 
 router.post("/signin", (req, res) => {});
 
