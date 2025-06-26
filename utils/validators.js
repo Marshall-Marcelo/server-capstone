@@ -1,4 +1,4 @@
-export const validateEmail = ({ requiredDomain, email }) => {
+export const validateEmail = ({ requiredDomain = "", email }) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailRegex.test(email)) {

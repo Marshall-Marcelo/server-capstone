@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import authRoute from "./routes/auth.route.js";
+import { router as departmentRoute } from "./routes/department.route.js";
+
 import { errorHandler } from "./middleware/errorHandler.middleware.js";
 
 dotenv.config();
@@ -15,6 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use("/auth", authRoute);
+app.use("/department", departmentRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello ESM!");

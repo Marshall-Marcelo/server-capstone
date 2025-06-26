@@ -28,15 +28,15 @@ export class AppError extends Error {
 export const errorHandler = (err, req, res, next) => {
   const isDev = process.env.ENVIRONMENT !== "production";
 
-  const statusCode = err instanceof AppError ? err.statusCode : 500;
-  const message = err instanceof AppError ? err.message : "Something went wrong. Please try again later.";
+  const isAppError = err instanceof AppError;
+  const statusCode = isAppError ? err.statusCode : HttpStatusCodes.InternalServerError;
+  const message = isAppError ? err.message : "Something went wrong. Please try again later.";
 
-  // Log error details
-  if (isDev || !(err instanceof AppError)) {
+  if (isDev || !isAppError) {
     console.error("💥 Error:", {
       message: err.message,
       stack: err.stack,
-      ...(err instanceof AppError && err.details && { details: err.details }),
+      ...(isAppError && err.details && { details: err.details }),
     });
   }
 
@@ -45,7 +45,7 @@ export const errorHandler = (err, req, res, next) => {
     error: {
       message,
       ...(isDev && { stack: err.stack }),
-      ...(isDev && err instanceof AppError && err.details && { details: err.details }),
+      ...(isDev && isAppError && err.details && { details: err.details }),
     },
   });
 };

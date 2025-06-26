@@ -1,0 +1,97 @@
+import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
+import { hashPassword, verifyPassword } from "../utils/password.utils.js";
+import prisma from "../utils/primsa.connection.js";
+
+/**
+ * Checks if email is on the database
+ */
+export const checkEmailExistence = async (email) => {
+  return await prisma.users.findUnique({
+    where: { email },
+  });
+};
+
+export const login = async ({ email, password }) => {
+  const userData = await checkEmailExistence(email);
+
+  if (!userData || !verifyPassword(password, userData.password)) {
+    throw new AppError("Wrong email or password", HttpStatusCodes.Forbidden);
+  }
+
+  const { password: _, isArchived, isLocked, createdAt, ...data } = userData;
+  return data;
+};
+
+export const createAccount = async ({ firstName, lastName, userType, email, password }) => {
+  const user = await checkEmailExistence(email);
+
+  if (user) {
+    throw new AppError("Email already used", HttpStatusCodes.Conflict);
+  }
+
+  const newAccount = await prisma.users.create({
+    data: {
+      userId: crypto.randomUUID(),
+      firstName,
+      lastName,
+      email,
+      password: await hashPassword(password),
+      role: userType,
+    },
+  });
+
+  const { password: _, createdAt, isArchived, isLocked, ...data } = newAccount;
+  return data;
+};
+
+export const createDistributorAccount = async ({ firstName, lastName, email, password, distributorType, contactNumber, departmentId }) => {
+  const existingUser = await checkEmailExistence(email);
+
+  if (existingUser) {
+    throw new AppError("Email already used", HttpStatusCodes.Conflict);
+  }
+
+  const distributorData = {
+    distributorTypeId: Number(distributorType),
+    contactNumber,
+  };
+
+  if (Number(distributorType) === 2) {
+    if (!departmentId) {
+      throw new AppError("Department ID is required for distributor (CCA Member)", HttpStatusCodes.BadRequest);
+    }
+
+    const findDepartment = await prisma.department.findFirst({ where: { departmentId } });
+
+    if (!findDepartment) {
+      throw new AppError("Department ID not found", HttpStatusCodes.BadRequest);
+    }
+
+    distributorData.departmentId = departmentId;
+  }
+
+  const result = await prisma.users.create({
+    data: {
+      userId: crypto.randomUUID(),
+      firstName,
+      lastName,
+      email,
+      password: await hashPassword(password),
+      role: "none",
+      distributor: {
+        create: distributorData,
+      },
+    },
+    include: {
+      distributor: true,
+    },
+  });
+
+  const { password: _, createdAt, isArchived, isLocked, distributor, ...userData } = result;
+  const distributorDetails = distributor?.[0] ?? distributor;
+
+  return {
+    ...userData,
+    ...distributorDetails,
+  };
+};

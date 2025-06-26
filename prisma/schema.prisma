@@ -36,7 +36,7 @@ model allocationlog {
 
 model department {
   departmentId String        @id @db.VarChar(36)
-  name         String        @db.VarChar(100)
+  name         String        @unique(map: "name_UNIQUE") @db.VarChar(100)
   trainerId    String?       @db.VarChar(36)
   users        users?        @relation(fields: [trainerId], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "department_ibfk_1")
   distributor  distributor[]
@@ -48,11 +48,11 @@ model department {
 model distributor {
   userId            String           @db.VarChar(36)
   distributorTypeId Int
-  departmentId      String           @db.VarChar(36)
+  departmentId      String?          @db.VarChar(36)
   contactNumber     String           @db.VarChar(20)
   users             users            @relation(fields: [userId], references: [userId], onUpdate: NoAction, map: "distributor_ibfk_1")
   distributortypes  distributortypes @relation(fields: [distributorTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "distributor_ibfk_2")
-  department        department       @relation(fields: [departmentId], references: [departmentId], onDelete: NoAction, onUpdate: NoAction, map: "distributor_ibfk_3")
+  department        department?      @relation(fields: [departmentId], references: [departmentId], onDelete: NoAction, onUpdate: NoAction, map: "distributor_ibfk_3")
 
   @@id([userId, distributorTypeId])
   @@index([distributorTypeId], map: "distributor_ibfk_2")
