@@ -126,7 +126,7 @@ model reservations {
   status            reservations_status? @default(pending)
   reservedAt        DateTime?            @default(now()) @db.Timestamp(0)
   showschedules     showschedules        @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "reservations_ibfk_1")
-  ticket            ticket[]
+  reservedtickets   reservedtickets[]
 
   @@index([scheduleId], map: "reservations_ibfk_1")
 }
@@ -213,18 +213,14 @@ model ticket {
   status             ticket_status      @default(not_allocated)
   seatNumber         String             @db.VarChar(10)
   distributorId      String?            @db.VarChar(36)
-  reservationId      String?            @db.VarChar(36)
   isComplimentary    Boolean?           @default(false)
-  buyerEmail         String?            @db.VarChar(150)
-  buyerName          String?            @db.VarChar(150)
   allocatedtickets   allocatedtickets[]
   remittedtickets    remittedtickets[]
+  reservedtickets    reservedtickets[]
   showschedules      showschedules      @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, onUpdate: NoAction, map: "ticket_ibfk_1")
   users              users?             @relation(fields: [distributorId], references: [userId], onDelete: Restrict, onUpdate: NoAction, map: "ticket_ibfk_2")
-  reservations       reservations?      @relation(fields: [reservationId], references: [reservationId], onUpdate: NoAction, map: "ticket_ibfk_3")
 
   @@index([distributorId], map: "distributorId")
-  @@index([reservationId], map: "reservationId")
   @@index([scheduleId], map: "ticket_ibfk_1")
 }
 
@@ -248,6 +244,16 @@ model users {
   remittancehistory_remittancehistory_receivedByTousers remittancehistory[] @relation("remittancehistory_receivedByTousers")
   shows                                                 shows[]
   ticket                                                ticket[]
+}
+
+model reservedtickets {
+  reservationId String       @db.VarChar(36)
+  ticketId      String       @db.VarChar(36)
+  reservations  reservations @relation(fields: [reservationId], references: [reservationId], onDelete: Cascade, map: "reservation")
+  ticket        ticket       @relation(fields: [ticketId], references: [ticketId], onDelete: Cascade, map: "ticket")
+
+  @@id([reservationId, ticketId])
+  @@index([ticketId], map: "ticket_idx")
 }
 
 enum notifications_type {
