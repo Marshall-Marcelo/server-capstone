@@ -131,9 +131,8 @@ model reservations {
 }
 
 model seatmapmetadata {
-  id            Int             @id @default(autoincrement())
-  metadata      Json
-  showschedules showschedules[]
+  id       Int  @id @default(autoincrement())
+  metadata Json
 }
 
 model showgenre {
@@ -179,16 +178,13 @@ model showschedules {
   facebookLink      String?             @db.VarChar(255)
   femaleCount       Int?                @default(0)
   maleCount         Int?                @default(0)
-  seatMetaDataId    Int?
   allocationlog     allocationlog[]
   remittancehistory remittancehistory[]
   reservations      reservations[]
   shows             shows               @relation(fields: [showId], references: [showId], onDelete: Cascade, onUpdate: NoAction, map: "showschedules_ibfk_1")
-  seatmapmetadata   seatmapmetadata?    @relation(fields: [seatMetaDataId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "showschedules_ibfk_2")
   showseats         showseats[]
   ticket            ticket[]
 
-  @@index([seatMetaDataId], map: "seatMetaDataId")
   @@index([showId], map: "showschedules_ibfk_1")
 }
 
