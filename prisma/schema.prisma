@@ -67,9 +67,8 @@ model distributortypes {
 }
 
 model genre {
-  genreId   Int         @id @default(autoincrement())
-  name      String      @db.VarChar(100)
-  showgenre showgenre[]
+  name                             String      @id @db.VarChar(100)
+  showgenre_showgenre_genreTogenre showgenre[] @relation("showgenre_genreTogenre")
 }
 
 model notifications {
@@ -138,13 +137,13 @@ model seatmapmetadata {
 }
 
 model showgenre {
-  showId  String @db.VarChar(36)
-  genreId Int
-  shows   shows  @relation(fields: [showId], references: [showId], onDelete: Cascade, onUpdate: NoAction, map: "showgenre_ibfk_1")
-  genre   genre  @relation(fields: [genreId], references: [genreId], onDelete: NoAction, onUpdate: NoAction, map: "showgenre_ibfk_2")
+  showId                       String @db.VarChar(36)
+  genre                        String @db.VarChar(100)
+  shows                        shows  @relation(fields: [showId], references: [showId], onDelete: Cascade, map: "showgenre_ibfk_1")
+  genre_showgenre_genreTogenre genre  @relation("showgenre_genreTogenre", fields: [genre], references: [name], onDelete: Cascade, map: "showgenre_ibfk_2")
 
-  @@id([showId, genreId])
-  @@index([genreId], map: "genreId")
+  @@id([showId, genre])
+  @@index([genre], map: "showgenre_ibfk_2_idx")
 }
 
 model shows {
