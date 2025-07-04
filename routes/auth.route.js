@@ -1,5 +1,11 @@
 import express from "express";
-import { createCCAController, ccaLoginController, createDistributorAccountController } from "../controller/auth.controller.js";
+import {
+  createCCAController,
+  loginController,
+  createDistributorAccountController,
+  getUserInformationController,
+} from "../controller/auth.controller.js";
+import { verifyAuth } from "../middleware/auth.middleware.js";
 
 export const router = express.Router();
 
@@ -8,7 +14,9 @@ router.post("/newCCA", createCCAController);
 
 router.post("/newDistributor", createDistributorAccountController);
 
-router.post("/ccaLogin", ccaLoginController);
+router.post("/login", loginController);
+
+router.get("/getUserInformation", verifyAuth, getUserInformationController);
 
 router.post("/signin", (req, res) => {});
 

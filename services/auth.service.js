@@ -8,18 +8,52 @@ import prisma from "../utils/primsa.connection.js";
 export const checkEmailExistence = async (email) => {
   return await prisma.users.findUnique({
     where: { email },
+    include: {
+      distributor: {
+        select: {
+          contactNumber: true,
+          departmentId: true,
+          distributorTypeId: true,
+        },
+      },
+    },
   });
 };
-
 export const login = async ({ email, password }) => {
   const userData = await checkEmailExistence(email);
 
-  if (!userData || !verifyPassword(password, userData.password)) {
+  if (!userData) {
     throw new AppError("Wrong email or password", HttpStatusCodes.Forbidden);
   }
 
-  const { password: _, isArchived, isLocked, createdAt, ...data } = userData;
-  return data;
+  const isPasswordValid = await verifyPassword(password, userData.password);
+  if (!isPasswordValid) {
+    throw new AppError("Wrong email or password", HttpStatusCodes.Forbidden);
+  }
+
+  const { password: _, isArchived, isLocked, createdAt, ...safeUserData } = userData;
+
+  return safeUserData;
+};
+
+export const getUser = async ({ userId }) => {
+  return await prisma.users.findFirst({
+    where: { userId },
+    select: {
+      userId: true,
+      role: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      distributor: {
+        select: {
+          contactNumber: true,
+          departmentId: true,
+          distributorTypeId: true,
+        },
+      },
+    },
+  });
 };
 
 export const createAccount = async ({ firstName, lastName, userType, email, password }) => {
@@ -77,7 +111,7 @@ export const createDistributorAccount = async ({ firstName, lastName, email, pas
       lastName,
       email,
       password: await hashPassword(password),
-      role: "none",
+      role: "distributor",
       distributor: {
         create: distributorData,
       },

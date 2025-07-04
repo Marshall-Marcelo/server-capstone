@@ -228,7 +228,7 @@ model users {
   createdAt                                             DateTime            @default(now()) @db.Timestamp(0)
   isArchived                                            Boolean             @default(false)
   isLocked                                              Boolean             @default(false)
-  role                                                  users_role          @default(none)
+  role                                                  users_role
   allocationlog_allocationlog_distributorIdTousers      allocationlog[]     @relation("allocationlog_distributorIdTousers")
   allocationlog_allocationlog_allocatedByTousers        allocationlog[]     @relation("allocationlog_allocatedByTousers")
   department                                            department[]
@@ -279,12 +279,6 @@ enum ticket_status {
   allocated
 }
 
-enum users_role {
-  head
-  trainer
-  none
-}
-
 enum showseats_seatSection {
   orchestra_left
   orchestra_right
@@ -297,4 +291,10 @@ enum showseats_seatSection {
 enum reservations_status {
   pending
   verified
+}
+
+enum users_role {
+  head
+  trainer
+  distributor
 }

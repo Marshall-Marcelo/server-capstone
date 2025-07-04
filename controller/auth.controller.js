@@ -1,39 +1,45 @@
 import { asyncHanlder } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { login, createAccount, createDistributorAccount } from "../services/auth.service.js";
+import { login, createAccount, createDistributorAccount, getUser } from "../services/auth.service.js";
 import { generateToken } from "../utils/token.utils.js";
 import { validateEmail } from "../utils/validators.js";
 
-/**
- *
- * CCA Login - (for trainer and head)
- */
-export const ccaLoginController = asyncHanlder(async (req, res, next) => {
-  const { email, password } = req.body;
+export const loginController = asyncHanlder(async (req, res) => {
+  const { email, password, expectedRole } = req.body;
 
-  if (!email || !password) {
-    throw new AppError("Username/Email and Password are required", HttpStatusCodes.BadRequest);
+  if (!email || !password || !expectedRole) {
+    throw new AppError("Email, password, and role are required", HttpStatusCodes.BadRequest);
   }
 
-  const emailCheck = validateEmail({ requiredDomain: "@slu.edu.ph", email });
-
-  if (!emailCheck.valid) {
-    throw new AppError(emailCheck.message, HttpStatusCodes.BadRequest);
+  if (expectedRole !== "distributor") {
+    const emailCheck = validateEmail({ requiredDomain: "@slu.edu.ph", email });
+    if (!emailCheck.valid) {
+      throw new AppError(emailCheck.message, HttpStatusCodes.BadRequest);
+    }
   }
 
   const user = await login({ email, password });
 
   if (user.isArchived || user.isLocked) {
-    throw new AppError("Can't login account, (it is either locked or archived");
+    throw new AppError("Account is locked or archived", HttpStatusCodes.Forbidden);
   }
 
-  if (user.role == "none") {
-    throw new AppError("Can't login this type of account", HttpStatusCodes.Forbidden);
+  if (user.role !== expectedRole) {
+    throw new AppError("Unauthorized Account Role", HttpStatusCodes.Forbidden);
   }
 
-  const token = generateToken({ userId: user.userId, userRole: user.role });
+  res.cookie("authToken", generateToken({ userId: user.userId, userRole: user.role }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
 
-  res.status(HttpStatusCodes.OK).json({ ...user, token });
+  res.status(HttpStatusCodes.OK).json(user);
+});
+
+export const getUserInformationController = asyncHanlder(async (req, res, next) => {
+  const user = await getUser({ userId: req.user.userId });
+  res.status(HttpStatusCodes.OK).json({ ...user });
 });
 
 /**

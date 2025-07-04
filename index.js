@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import authRoute from "./routes/auth.route.js";
 import { router as departmentRoute } from "./routes/department.route.js";
@@ -13,12 +14,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-app.use("/auth", authRoute);
-app.use("/department", departmentRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/department", departmentRoute);
 app.use("/api/show", showRoute);
 
 app.get("/", (req, res) => {
