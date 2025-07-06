@@ -12,7 +12,12 @@ export const checkEmailExistence = async (email) => {
       distributor: {
         select: {
           contactNumber: true,
-          distributorTypeId: true,
+          distributortypes: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           department: {
             select: {
               departmentId: true,
@@ -60,7 +65,12 @@ export const getUser = async ({ userId }) => {
       distributor: {
         select: {
           contactNumber: true,
-          distributorTypeId: true,
+          distributortypes: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           department: {
             select: {
               departmentId: true,
