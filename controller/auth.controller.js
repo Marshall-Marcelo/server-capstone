@@ -39,6 +39,7 @@ export const loginController = asyncHanlder(async (req, res) => {
 
 export const getUserInformationController = asyncHanlder(async (req, res, next) => {
   const user = await getUser({ userId: req.user.userId });
+
   res.status(HttpStatusCodes.OK).json({ ...user });
 });
 

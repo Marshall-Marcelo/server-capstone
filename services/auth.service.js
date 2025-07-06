@@ -12,13 +12,25 @@ export const checkEmailExistence = async (email) => {
       distributor: {
         select: {
           contactNumber: true,
-          departmentId: true,
           distributorTypeId: true,
+          department: {
+            select: {
+              departmentId: true,
+              name: true,
+            },
+          },
+        },
+      },
+      department: {
+        select: {
+          departmentId: true,
+          name: true,
         },
       },
     },
   });
 };
+
 export const login = async ({ email, password }) => {
   const userData = await checkEmailExistence(email);
 
@@ -48,8 +60,19 @@ export const getUser = async ({ userId }) => {
       distributor: {
         select: {
           contactNumber: true,
-          departmentId: true,
           distributorTypeId: true,
+          department: {
+            select: {
+              departmentId: true,
+              name: true,
+            },
+          },
+        },
+      },
+      department: {
+        select: {
+          departmentId: true,
+          name: true,
         },
       },
     },
