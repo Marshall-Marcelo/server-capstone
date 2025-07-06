@@ -24,7 +24,7 @@ export const loginController = asyncHanlder(async (req, res) => {
     throw new AppError("Account is locked or archived", HttpStatusCodes.Forbidden);
   }
 
-  if (user.role !== expectedRole) {
+  if (user.role === "distributor") {
     throw new AppError("Unauthorized Account Role", HttpStatusCodes.Forbidden);
   }
 
