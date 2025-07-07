@@ -9,6 +9,7 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
       showType,
       departmentId: department,
       createdBy,
+      showCover: coverImage,
       showgenre: {
         create: genre.map((name) => ({
           genre_showgenre_genreTogenre: {
@@ -24,3 +25,5 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
 
   return newShow;
 };
+
+export const getShows = () => {};

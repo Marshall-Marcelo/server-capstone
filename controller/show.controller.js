@@ -3,9 +3,12 @@ import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware
 import { createShow } from "../services/show.service.js";
 
 export const createShowController = asyncHanlder(async (req, res, next) => {
-  const { showTitle, coverImage, description, department, genre = "", createdBy, showType } = req.body;
+  const { showTitle, description, department, genre, createdBy, showType } = req.body;
 
-  if (!showTitle || !coverImage || !description || !department || !genre || !createdBy || !showType) {
+  const file = req.file;
+  if (!file) throw new AppError("Image is required", HttpStatusCodes.BadRequest);
+
+  if (!showTitle || !description || !department || !genre || !createdBy || !showType) {
     throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
   }
 
@@ -14,6 +17,8 @@ export const createShowController = asyncHanlder(async (req, res, next) => {
     .map((g) => g.trim())
     .filter((g) => g !== "");
 
-  const newShow = await createShow({ showTitle, coverImage, description, department, genre: cleanedGenres, createdBy, showType });
+  const newShow = await createShow({ showTitle, coverImage: file.buffer, description, department, genre: cleanedGenres, createdBy, showType });
   res.status(HttpStatusCodes.Created).json({ message: "Show Created", newShow });
 });
+
+export const getShowsController = asyncHanlder(async (req, res, next) => {});

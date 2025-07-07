@@ -152,8 +152,9 @@ model shows {
   showType      shows_showType
   departmentId  String          @db.VarChar(36)
   createdBy     String          @db.VarChar(36)
-  createdAt     DateTime?       @default(now()) @db.Timestamp(0)
-  isArchived    Boolean?        @default(false)
+  createdAt     DateTime        @default(now()) @db.Timestamp(0)
+  isArchived    Boolean         @default(false)
+  showCover     Bytes
   showgenre     showgenre[]
   department    department      @relation(fields: [departmentId], references: [departmentId], onDelete: NoAction, onUpdate: NoAction, map: "shows_ibfk_1")
   users         users           @relation(fields: [createdBy], references: [userId], onDelete: Cascade, onUpdate: NoAction, map: "shows_ibfk_2")
