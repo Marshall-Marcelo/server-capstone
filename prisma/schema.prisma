@@ -165,24 +165,24 @@ model shows {
 }
 
 model showschedules {
-  scheduleId        Int                 @id @default(autoincrement())
-  showId            String              @db.VarChar(36)
-  date              DateTime            @db.Date
-  time              DateTime            @db.Time(0)
-  isOpen            Boolean?            @default(true)
-  commissionFee     Decimal             @db.Decimal(10, 2)
-  isArchived        Boolean?            @default(false)
-  isRescheduled     Boolean?            @default(false)
-  isFreeSeating     Boolean?            @default(false)
-  isNonTicketed     Boolean?            @default(false)
-  contactNumber     String?             @db.VarChar(20)
-  facebookLink      String?             @db.VarChar(255)
-  femaleCount       Int?                @default(0)
-  maleCount         Int?                @default(0)
+  scheduleId        Int                       @id @default(autoincrement())
+  showId            String                    @db.VarChar(36)
+  date              DateTime                  @db.Date
+  time              DateTime                  @db.Time(0)
+  isOpen            Boolean?                  @default(true)
+  commissionFee     Decimal                   @db.Decimal(10, 2)
+  isArchived        Boolean?                  @default(false)
+  isRescheduled     Boolean?                  @default(false)
+  seatingType       showschedules_seatingType
+  ticketType        showschedules_ticketType
+  contactNumber     String?                   @db.VarChar(20)
+  facebookLink      String?                   @db.VarChar(255)
+  femaleCount       Int?                      @default(0)
+  maleCount         Int?                      @default(0)
   allocationlog     allocationlog[]
   remittancehistory remittancehistory[]
   reservations      reservations[]
-  shows             shows               @relation(fields: [showId], references: [showId], onDelete: Cascade, onUpdate: NoAction, map: "showschedules_ibfk_1")
+  shows             shows                     @relation(fields: [showId], references: [showId], onDelete: Cascade, onUpdate: NoAction, map: "showschedules_ibfk_1")
   showseats         showseats[]
   ticket            ticket[]
 
@@ -298,4 +298,14 @@ enum users_role {
   head
   trainer
   distributor
+}
+
+enum showschedules_seatingType {
+  freeSeating
+  controlledSeating
+}
+
+enum showschedules_ticketType {
+  ticketed
+  nonTicketed
 }

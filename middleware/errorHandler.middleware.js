@@ -33,7 +33,7 @@ export const errorHandler = (err, req, res, next) => {
   const message = isAppError ? err.message : "Something went wrong. Please try again later.";
 
   if (isDev || !isAppError) {
-    console.error("💥 Error:", {
+    console.error(" Error:", {
       message: err.message,
       stack: err.stack,
       ...(isAppError && err.details && { details: err.details }),

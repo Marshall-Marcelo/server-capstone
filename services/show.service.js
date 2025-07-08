@@ -26,4 +26,23 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
   return newShow;
 };
 
-export const getShows = () => {};
+export const getShow = async ({ id }) => {
+  return await prisma.shows.findFirst({
+    where: {
+      showId: id,
+    },
+    include: {
+      showschedules: true,
+      department: true,
+      showgenre: {
+        include: {
+          genre_showgenre_genreTogenre: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};

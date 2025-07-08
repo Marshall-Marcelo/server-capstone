@@ -1,6 +1,6 @@
 import { asyncHanlder } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { createShow } from "../services/show.service.js";
+import { createShow, getShow } from "../services/show.service.js";
 
 export const createShowController = asyncHanlder(async (req, res, next) => {
   const { showTitle, description, department, genre, createdBy, showType } = req.body;
@@ -21,4 +21,16 @@ export const createShowController = asyncHanlder(async (req, res, next) => {
   res.status(HttpStatusCodes.Created).json({ message: "Show Created", newShow });
 });
 
-export const getShowsController = asyncHanlder(async (req, res, next) => {});
+export const getShowController = asyncHanlder(async (req, res, next) => {
+  const { id } = req.params;
+  const show = await getShow({ id });
+
+  const genreNames = show?.showgenre.map((g) => g.genre_showgenre_genreTogenre.name);
+
+  const { showgenre, ...data } = show;
+
+  res.status(HttpStatusCodes.OK).json({
+    ...data,
+    genreNames,
+  });
+});
