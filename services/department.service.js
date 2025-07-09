@@ -21,3 +21,7 @@ export const createDepartment = async ({ name }) => {
 
   return newDepartment;
 };
+
+export const getDepartments = async () => {
+  return await prisma.department.findMany();
+};
