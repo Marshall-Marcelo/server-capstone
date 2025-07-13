@@ -1,10 +1,10 @@
-import { asyncHanlder } from "../middleware/asyncHandler.middleware.js";
+import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
 import { login, createAccount, createDistributorAccount, getUser } from "../services/auth.service.js";
 import { generateToken } from "../utils/token.utils.js";
 import { validateEmail } from "../utils/validators.js";
 
-export const loginController = asyncHanlder(async (req, res) => {
+export const loginController = asyncHandler(async (req, res) => {
   const { email, password, expectedRole } = req.body;
 
   if (!email || !password || !expectedRole) {
@@ -37,7 +37,7 @@ export const loginController = asyncHanlder(async (req, res) => {
   res.status(HttpStatusCodes.OK).json(user);
 });
 
-export const getUserInformationController = asyncHanlder(async (req, res, next) => {
+export const getUserInformationController = asyncHandler(async (req, res, next) => {
   const user = await getUser({ userId: req.user.userId });
 
   res.status(HttpStatusCodes.OK).json({ ...user });
@@ -49,7 +49,7 @@ export const getUserInformationController = asyncHanlder(async (req, res, next) 
  *
  * type = trainer or head
  */
-export const createCCAController = asyncHanlder(async (req, res, next) => {
+export const createCCAController = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, email, password, type } = req.body;
 
   if (!firstName || !lastName || !email || !password || !type) {
@@ -66,7 +66,7 @@ export const createCCAController = asyncHanlder(async (req, res, next) => {
   res.status(HttpStatusCodes.Created).json({ message: "CCA Account Create Successfully", newTrainer });
 });
 
-export const createDistributorAccountController = asyncHanlder(async (req, res, next) => {
+export const createDistributorAccountController = asyncHandler(async (req, res, next) => {
   console.log(req.body);
   const { firstName, lastName, email, password, distributorType, contactNumber, departmentId } = req.body;
 

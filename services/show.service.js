@@ -26,59 +26,32 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
   return newShow;
 };
 
-export const getShows = async ({ offSet, limit, departmentId, showType, search }) => {
+export const getShows = async ({ departmentId, showType }) => {
   const baseWhere = {
     ...(departmentId && { departmentId }),
     showType: { in: ["majorConcert", "showCase"] },
     ...(showType && { showType }),
-    ...(search && {
-      title: {
-        contains: search,
-      },
-    }),
   };
 
-  const [shows, total, totalMajorConcert, totalShowCase] = await Promise.all([
-    prisma.shows.findMany({
-      where: baseWhere,
-      skip: offSet,
-      take: limit,
-      select: {
-        showId: true,
-        showType: true,
-        title: true,
-        department: {
-          select: {
-            name: true,
-            departmentId: true,
-          },
+  const shows = await prisma.shows.findMany({
+    where: baseWhere,
+    select: {
+      showId: true,
+      showType: true,
+      title: true,
+      department: {
+        select: {
+          name: true,
+          departmentId: true,
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-    prisma.shows.count({ where: baseWhere }),
-    prisma.shows.count({
-      where: {
-        ...baseWhere,
-        showType: "majorConcert",
-      },
-    }),
-    prisma.shows.count({
-      where: {
-        ...baseWhere,
-        showType: "showCase",
-      },
-    }),
-  ]);
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-  return {
-    shows,
-    total,
-    totalMajorConcert,
-    totalShowCase,
-  };
+  return { shows };
 };
 
 export const getShow = async ({ id }) => {

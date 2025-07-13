@@ -1,8 +1,8 @@
-import { asyncHanlder } from "../middleware/asyncHandler.middleware.js";
+import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
 import { createDepartment, getDepartments } from "../services/department.service.js";
 
-export const createDepartmentController = asyncHanlder(async (req, res, next) => {
+export const createDepartmentController = asyncHandler(async (req, res, next) => {
   const { name } = req.body;
 
   const newDepartment = await createDepartment({ name });
@@ -10,7 +10,7 @@ export const createDepartmentController = asyncHanlder(async (req, res, next) =>
   res.status(HttpStatusCodes.Created).json({ ...newDepartment });
 });
 
-export const getDepartmentListController = asyncHanlder(async (req, res, next) => {
+export const getDepartmentListController = asyncHandler(async (req, res, next) => {
   const departments = await getDepartments();
   res.json({ departments });
 });
