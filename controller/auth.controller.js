@@ -24,7 +24,10 @@ export const loginController = asyncHandler(async (req, res) => {
     throw new AppError("Account is locked or archived", HttpStatusCodes.Forbidden);
   }
 
-  if (user.role === "distributor") {
+  if (
+    ((user.role === "head" || user.role === "trainer") && expectedRole !== "cca") ||
+    (user.role === "distributor" && expectedRole !== "distributor")
+  ) {
     throw new AppError("Unauthorized Account Role", HttpStatusCodes.Forbidden);
   }
 
@@ -34,13 +37,21 @@ export const loginController = asyncHandler(async (req, res) => {
     sameSite: "strict",
   });
 
-  res.status(HttpStatusCodes.OK).json(user);
+  const { department, distributor, ...userData } = user;
+  const [userDepartment] = user.department;
+  const [userDistributor] = user.distributor;
+
+  res.status(HttpStatusCodes.OK).json({ ...userData, department: userDepartment, distributor: userDistributor });
 });
 
 export const getUserInformationController = asyncHandler(async (req, res, next) => {
   const user = await getUser({ userId: req.user.userId });
 
-  res.status(HttpStatusCodes.OK).json({ ...user });
+  const { department, distributor, ...userData } = user;
+  const [userDepartment] = user.department;
+  const [userDistributor] = user.distributor;
+
+  res.status(HttpStatusCodes.OK).json({ ...userData, department: userDepartment, distributor: userDistributor });
 });
 
 /**
