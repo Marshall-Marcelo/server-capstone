@@ -1,5 +1,14 @@
 import prisma from "../utils/primsa.connection.js";
 
+export const doesShowExist = async (showId) => {
+  const existingShow = await prisma.shows.findUnique({
+    where: { showId },
+    select: { showId: true },
+  });
+
+  return !!existingShow;
+};
+
 export const createShow = async ({ showTitle, coverImage, description, department, genre = [], createdBy, showType }) => {
   const newShow = await prisma.shows.create({
     data: {
@@ -26,19 +35,20 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
   return newShow;
 };
 
-export const getShows = async ({ departmentId, showType }) => {
-  const baseWhere = {
+export const getShows = async ({ departmentId, showType, isArchived = false }) => {
+  const where = {
     ...(departmentId && { departmentId }),
-    showType: { in: ["majorConcert", "showCase"] },
-    ...(showType && { showType }),
+    ...(showType ? { showType } : { showType: { in: ["majorConcert", "showCase"] } }),
+    isArchived,
   };
 
   const shows = await prisma.shows.findMany({
-    where: baseWhere,
+    where,
     select: {
       showId: true,
       showType: true,
       title: true,
+      showCover: true,
       department: {
         select: {
           name: true,
@@ -72,5 +82,25 @@ export const getShow = async ({ id }) => {
         },
       },
     },
+  });
+};
+
+export const archiveShow = async (showId) => {
+  return await prisma.shows.update({
+    where: { showId },
+    data: { isArchived: true },
+  });
+};
+
+export const unArchiveShow = async (showId) => {
+  return await prisma.shows.update({
+    where: { showId },
+    data: { isArchived: false },
+  });
+};
+
+export const deleteShow = async (showId) => {
+  return await prisma.shows.delete({
+    where: { showId },
   });
 };

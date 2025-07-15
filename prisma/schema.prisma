@@ -20,7 +20,7 @@ model allocatedtickets {
 
 model allocationlog {
   allocationLogId                          String             @id @db.VarChar(36)
-  scheduleId                               Int
+  scheduleId                               String             @db.VarChar(36)
   distributorId                            String             @db.VarChar(36)
   allocatedBy                              String             @db.VarChar(36)
   dateAllocated                            DateTime?          @default(now()) @db.Timestamp(0)
@@ -88,7 +88,7 @@ model notifications {
 
 model remittancehistory {
   remittanceId                              String            @id @db.VarChar(36)
-  scheduleId                                Int
+  scheduleId                                String            @db.VarChar(36)
   remittedBy                                String            @db.VarChar(36)
   receivedBy                                String            @db.VarChar(36)
   totalRemittance                           Decimal           @db.Decimal(10, 2)
@@ -100,9 +100,9 @@ model remittancehistory {
   users_remittancehistory_receivedByTousers users             @relation("remittancehistory_receivedByTousers", fields: [receivedBy], references: [userId], map: "remittancehistory_ibfk_3")
   remittedtickets                           remittedtickets[]
 
-  @@index([scheduleId], map: "remittancehistory_ibfk_1")
   @@index([remittedBy], map: "remittancehistory_ibfk_2")
   @@index([receivedBy], map: "remittancehistory_ibfk_3")
+  @@index([scheduleId], map: "remittancehistory_ibfk_1_idx")
 }
 
 model remittedtickets {
@@ -117,7 +117,7 @@ model remittedtickets {
 
 model reservations {
   reservationId     String               @id @db.VarChar(36)
-  scheduleId        Int
+  scheduleId        String               @db.VarChar(36)
   customerFirstName String               @db.VarChar(100)
   customerLastName  String               @db.VarChar(100)
   email             String               @db.VarChar(150)
@@ -127,7 +127,7 @@ model reservations {
   showschedules     showschedules        @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, map: "reservations_ibfk_1")
   reservedtickets   reservedtickets[]
 
-  @@index([scheduleId], map: "reservations_ibfk_1")
+  @@index([scheduleId], map: "reservations_ibkf_1_idx")
 }
 
 model seatmapmetadata {
@@ -154,7 +154,7 @@ model shows {
   createdBy     String          @db.VarChar(36)
   createdAt     DateTime        @default(now()) @db.Timestamp(0)
   isArchived    Boolean         @default(false)
-  showCover     Bytes
+  showCover     String          @db.Text
   showgenre     showgenre[]
   department    department      @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade, map: "shows_ibfk_1")
   users         users           @relation(fields: [createdBy], references: [userId], map: "shows_ibfk_2")
@@ -165,10 +165,8 @@ model shows {
 }
 
 model showschedules {
-  scheduleId        Int                       @id @default(autoincrement())
+  scheduleId        String                    @id @db.VarChar(36)
   showId            String                    @db.VarChar(36)
-  date              DateTime                  @db.Date
-  time              DateTime                  @db.Time(0)
   isOpen            Boolean?                  @default(true)
   commissionFee     Decimal                   @db.Decimal(10, 2)
   isArchived        Boolean?                  @default(false)
@@ -179,6 +177,7 @@ model showschedules {
   facebookLink      String?                   @db.VarChar(255)
   femaleCount       Int?                      @default(0)
   maleCount         Int?                      @default(0)
+  datetime          DateTime                  @db.DateTime(0)
   allocationlog     allocationlog[]
   remittancehistory remittancehistory[]
   reservations      reservations[]
@@ -190,7 +189,7 @@ model showschedules {
 }
 
 model showseats {
-  scheduleId    Int
+  scheduleId    String                @db.VarChar(36)
   seatNumber    String                @db.VarChar(10)
   seatSection   showseats_seatSection
   seatPosition  Json
@@ -204,7 +203,7 @@ model showseats {
 model ticket {
   ticketId           String             @id @db.VarChar(36)
   controlNumber      Int                @unique(map: "controlNumber")
-  scheduleId         Int
+  scheduleId         String             @db.VarChar(36)
   discountPercentage Decimal?           @db.Decimal(5, 2)
   status             ticket_status      @default(not_allocated)
   seatNumber         String             @db.VarChar(10)
@@ -217,7 +216,7 @@ model ticket {
   users              users?             @relation(fields: [distributorId], references: [userId], onDelete: Restrict, map: "ticket_ibfk_2")
 
   @@index([distributorId], map: "distributorId")
-  @@index([scheduleId], map: "ticket_ibfk_1")
+  @@index([scheduleId], map: "ticket_ibfk_1_idx")
 }
 
 model users {

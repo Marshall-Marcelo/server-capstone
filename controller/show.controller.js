@@ -1,12 +1,11 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { createShow, getShow, getShows } from "../services/show.service.js";
+import { archiveShow, createShow, deleteShow, doesShowExist, getShow, getShows, unArchiveShow } from "../services/show.service.js";
 
 export const createShowController = asyncHandler(async (req, res, next) => {
   const { showTitle, description, department, genre, createdBy, showType } = req.body;
 
-  const file = req.file;
-  if (!file) throw new AppError("Image is required", HttpStatusCodes.BadRequest);
+  const { imageUrl } = req;
 
   if (!showTitle || !description || !department || !genre || !createdBy || !showType) {
     throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
@@ -17,12 +16,19 @@ export const createShowController = asyncHandler(async (req, res, next) => {
     .map((g) => g.trim())
     .filter((g) => g !== "");
 
-  const newShow = await createShow({ showTitle, coverImage: file.buffer, description, department, genre: cleanedGenres, createdBy, showType });
+  const newShow = await createShow({ showTitle, coverImage: imageUrl, description, department, genre: cleanedGenres, createdBy, showType });
   res.status(HttpStatusCodes.Created).json({ message: "Show Created", newShow });
 });
 
 export const getShowController = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
+
+  const exists = await doesShowExist(id);
+
+  if (!exists) {
+    throw new AppError("Show Not Found", HttpStatusCodes.NotFound);
+  }
+
   const show = await getShow({ id });
 
   const genreNames = show?.showgenre.map((g) => g.genre_showgenre_genreTogenre.name);
@@ -42,4 +48,61 @@ export const getShowsController = asyncHandler(async (req, res) => {
   const { shows } = await getShows({ departmentId, showType });
 
   res.json({ shows });
+});
+
+export const getArchivedShowsController = asyncHandler(async (req, res) => {
+  const { departmentId } = req.params;
+
+  const shows = await getShows({ departmentId, isArchived: true });
+  res.status(HttpStatusCodes.OK).json({ shows });
+});
+
+export const archiveShowController = asyncHandler(async (req, res) => {
+  const { showId } = req.params;
+
+  if (!showId) {
+    throw new AppError("Show ID is required", HttpStatusCodes.BadRequest);
+  }
+
+  const exists = await doesShowExist(id);
+
+  if (!exists) {
+    throw new AppError("Show Not Found", HttpStatusCodes.NotFound);
+  }
+
+  await archiveShow(showId);
+  res.status(HttpStatusCodes.OK).json({ message: "Show archived successfully." });
+});
+
+export const unArchiveShowController = asyncHandler(async (req, res) => {
+  const { showId } = req.params;
+
+  if (!showId) {
+    throw new AppError("Show ID is required", HttpStatusCodes.BadRequest);
+  }
+
+  const exists = await doesShowExist(id);
+
+  if (!exists) {
+    throw new AppError("Show Not Found", HttpStatusCodes.NotFound);
+  }
+  await unArchiveShow(showId);
+  res.status(HttpStatusCodes.OK).json({ message: "Show unarchived successfully." });
+});
+
+export const deleteShowController = asyncHandler(async (req, res) => {
+  const { showId } = req.body;
+
+  if (!showId) {
+    throw new AppError("Show ID is required", HttpStatusCodes.BadRequest);
+  }
+
+  const exists = await doesShowExist(id);
+
+  if (!exists) {
+    throw new AppError("Show Not Found", HttpStatusCodes.NotFound);
+  }
+
+  await deleteShow(showId);
+  res.status(HttpStatusCodes.OK).json({ message: "Show deleted successfully." });
 });
