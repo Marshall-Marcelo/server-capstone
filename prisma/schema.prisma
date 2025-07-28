@@ -206,9 +206,10 @@ model ticket {
   scheduleId         String             @db.VarChar(36)
   discountPercentage Decimal?           @db.Decimal(5, 2)
   status             ticket_status      @default(not_allocated)
-  seatNumber         String             @db.VarChar(10)
+  seatNumber         String?            @db.VarChar(10)
   distributorId      String?            @db.VarChar(36)
   isComplimentary    Boolean?           @default(false)
+  ticketPrice        Decimal?           @db.Decimal(10, 2)
   allocatedtickets   allocatedtickets[]
   remittedtickets    remittedtickets[]
   reservedtickets    reservedtickets[]

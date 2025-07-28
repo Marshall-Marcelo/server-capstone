@@ -1,6 +1,6 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { addShowSchedule, getShowSchedules } from "../services/schedule.service.js";
+import { addShowSchedule, generateScheduleTickets, getShowSchedules } from "../services/schedule.service.js";
 import { doesShowExist } from "../services/show.service.js";
 import { convertDates } from "../utils/convert.utils.js";
 
@@ -22,8 +22,38 @@ export const addShowScheduleController = asyncHandler(async (req, res) => {
 
   switch (ticketType) {
     case "ticketed": {
+      // const { ticketPrice, commissionFee, contactNumber, facebookLink, controlNumbers, seatPricing, sectionedPrice } = req.body;
+      // const formattedDates = convertDates(dates);
+
+      // const createdSchedules = await addShowSchedule({
+      //   dates: formattedDates,
+      //   showId,
+      //   seatingType: seatingConfiguration,
+      //   ticketType,
+      //   commissionFee,
+      //   contactNumber,
+      //   facebookLink,
+      // });
+
+      // if (seatingConfiguration === "freeSeating") {
+      //   if (seatPricing === "fixed") {
+      //   }
+
+      //   for (const sched of createdSchedules) {
+      //     await generateScheduleTickets({
+      //       scheduleId: sched.scheduleId,
+      //       ticketPrice,
+      //       controlNumbers,
+      //     });
+      //   }
+      // }
+
+      console.log(req.body);
+
+      res.status(HttpStatusCodes.OK).json({ message: "Schedules Added" });
       break;
     }
+
     case "nonTicketed": {
       await addShowSchedule({
         dates: convertDates(dates),
@@ -31,11 +61,11 @@ export const addShowScheduleController = asyncHandler(async (req, res) => {
         seatingType: seatingConfiguration,
         ticketType,
       });
-      res.status(HttpStatusCodes.OK).json({ message: "Schedules Addded" });
+      res.status(HttpStatusCodes.OK).json({ message: "Schedules Added" });
       break;
     }
-    default: {
+
+    default:
       throw new AppError("Invalid Ticket Type Value", HttpStatusCodes.BadRequest);
-    }
   }
 });

@@ -35,9 +35,66 @@ export const addShowSchedule = async ({
     throw new AppError(`Conflicting schedules already exist for: ${conflictDetails.join(", ")}`, HttpStatusCodes.Conflict);
   }
 
-  return await prisma.showschedules.createMany({
+  await prisma.showschedules.createMany({
     data: schedules,
   });
+
+  return schedules.map(({ scheduleId, datetime }) => ({
+    scheduleId,
+    datetime,
+  }));
+};
+
+export const generateScheduleTickets = async ({
+  scheduleId,
+  ticketPrice = null,
+  sectionedPrice = {
+    orchestraLeft: null,
+    orchestraMiddle: null,
+    orchestraRight: null,
+    balconyLeft: null,
+    balconyMiddle: null,
+    balconyRight: null,
+  },
+  controlNumbers: { orchestra = [], balcony = [], complimentary = [] },
+}) => {
+  const tickets = [];
+
+  for (const num of orchestra) {
+    tickets.push({
+      ticketId: crypto.randomUUID(),
+      scheduleId,
+      controlNumber: num,
+      ticketPrice,
+      isComplimentary: false,
+    });
+  }
+
+  for (const num of balcony) {
+    tickets.push({
+      ticketId: crypto.randomUUID(),
+      scheduleId,
+      controlNumber: num,
+      ticketPrice,
+      isComplimentary: false,
+    });
+  }
+
+  for (const num of complimentary) {
+    tickets.push({
+      ticketId: crypto.randomUUID(),
+      scheduleId,
+      controlNumber: num,
+      ticketPrice: 0,
+      isComplimentary: true,
+    });
+  }
+
+  await prisma.ticket.createMany({
+    data: tickets,
+  });
+
+  return { created: tickets.length };
 };
 
 export const getShowSchedules = async (showId) => {
