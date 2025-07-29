@@ -1,8 +1,9 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { addShowSchedule, generateScheduleTickets, getShowSchedules } from "../services/schedule.service.js";
+import { addShowSchedule, generateScheduleTickets, generateSeats, getShowSchedules } from "../services/schedule.service.js";
 import { doesShowExist } from "../services/show.service.js";
 import { convertDates } from "../utils/convert.utils.js";
+import prisma from "../utils/primsa.connection.js";
 
 export const getShowSchedulesController = asyncHandler(async (req, res) => {
   const { showId } = req.query;
@@ -22,33 +23,45 @@ export const addShowScheduleController = asyncHandler(async (req, res) => {
 
   switch (ticketType) {
     case "ticketed": {
-      // const { ticketPrice, commissionFee, contactNumber, facebookLink, controlNumbers, seatPricing, sectionedPrice } = req.body;
-      // const formattedDates = convertDates(dates);
+      const { commissionFee, contactNumber, facebookLink, controlNumbers, seatPricing, seats, ticketPrice } = req.body;
 
-      // const createdSchedules = await addShowSchedule({
-      //   dates: formattedDates,
-      //   showId,
-      //   seatingType: seatingConfiguration,
-      //   ticketType,
-      //   commissionFee,
-      //   contactNumber,
-      //   facebookLink,
-      // });
+      const formattedDates = convertDates(dates);
 
-      // if (seatingConfiguration === "freeSeating") {
-      //   if (seatPricing === "fixed") {
-      //   }
+      await prisma.$transaction(async (tx) => {
+        const createdSchedules = await addShowSchedule({
+          dates: formattedDates,
+          showId,
+          seatingType: seatingConfiguration,
+          ticketType,
+          commissionFee,
+          contactNumber,
+          facebookLink,
+          tx,
+        });
 
-      //   for (const sched of createdSchedules) {
-      //     await generateScheduleTickets({
-      //       scheduleId: sched.scheduleId,
-      //       ticketPrice,
-      //       controlNumbers,
-      //     });
-      //   }
-      // }
-
-      console.log(req.body);
+        for (const sched of createdSchedules) {
+          if (seatingConfiguration === "freeSeating") {
+            await generateScheduleTickets({
+              scheduleId: sched.scheduleId,
+              ticketPrice,
+              controlNumbers,
+              seatingConfiguration,
+              tx,
+            });
+          } else if (seatingConfiguration === "controlledSeating") {
+            await generateScheduleTickets({
+              seatPricing,
+              seatingConfiguration,
+              seats,
+              scheduleId: sched.scheduleId,
+              ticketPrice,
+              controlNumbers,
+              tx,
+            });
+            await generateSeats({ tx, seats, schedId: sched.scheduleId });
+          }
+        }
+      });
 
       res.status(HttpStatusCodes.OK).json({ message: "Schedules Added" });
       break;
@@ -61,6 +74,7 @@ export const addShowScheduleController = asyncHandler(async (req, res) => {
         seatingType: seatingConfiguration,
         ticketType,
       });
+
       res.status(HttpStatusCodes.OK).json({ message: "Schedules Added" });
       break;
     }

@@ -1,4 +1,5 @@
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
+import { showseats_seatSection } from "../prisma/generated/prisma/index.js";
 import prisma from "../utils/primsa.connection.js";
 
 export const addShowSchedule = async ({
@@ -9,6 +10,7 @@ export const addShowSchedule = async ({
   contactNumber = null,
   facebookLink = null,
   commissionFee = 0,
+  tx = prisma,
 }) => {
   const schedules = dates.map(({ datetime }) => ({
     scheduleId: crypto.randomUUID(),
@@ -21,7 +23,7 @@ export const addShowSchedule = async ({
     facebookLink,
   }));
 
-  const conflicts = await prisma.showschedules.findMany({
+  const conflicts = await tx.showschedules.findMany({
     where: {
       showId,
       datetime: {
@@ -35,7 +37,7 @@ export const addShowSchedule = async ({
     throw new AppError(`Conflicting schedules already exist for: ${conflictDetails.join(", ")}`, HttpStatusCodes.Conflict);
   }
 
-  await prisma.showschedules.createMany({
+  await tx.showschedules.createMany({
     data: schedules,
   });
 
@@ -45,56 +47,67 @@ export const addShowSchedule = async ({
   }));
 };
 
-export const generateScheduleTickets = async ({
-  scheduleId,
-  ticketPrice = null,
-  sectionedPrice = {
-    orchestraLeft: null,
-    orchestraMiddle: null,
-    orchestraRight: null,
-    balconyLeft: null,
-    balconyMiddle: null,
-    balconyRight: null,
-  },
-  controlNumbers: { orchestra = [], balcony = [], complimentary = [] },
-}) => {
+export const generateScheduleTickets = async ({ tx, scheduleId, seatPricing, seats, ticketPrice, controlNumbers, seatingConfiguration }) => {
   const tickets = [];
 
-  for (const num of orchestra) {
-    tickets.push({
-      ticketId: crypto.randomUUID(),
-      scheduleId,
-      controlNumber: num,
-      ticketPrice,
-      isComplimentary: false,
-    });
-  }
+  const orchestra = controlNumbers?.orchestra || [];
+  const balcony = controlNumbers?.balcony || [];
+  const complimentary = controlNumbers?.complimentary || [];
 
-  for (const num of balcony) {
+  const isControlled = seatingConfiguration === "controlledSeating";
+  const isFixedPrice = seatPricing === "fixed";
+
+  for (const num of [...orchestra, ...balcony]) {
+    let seatNumber;
+    let price = ticketPrice;
+
+    if (isControlled) {
+      const seat = seats.find((s) => s.ticketControlNumber === num);
+      seatNumber = seat?.seatNumber;
+      if (!isFixedPrice) price = seat?.ticketPrice;
+    }
+
     tickets.push({
       ticketId: crypto.randomUUID(),
       scheduleId,
       controlNumber: num,
-      ticketPrice,
+      seatNumber: isControlled ? seatNumber : undefined,
+      ticketPrice: isFixedPrice ? ticketPrice : price,
       isComplimentary: false,
     });
   }
 
   for (const num of complimentary) {
+    let seatNumber;
+
+    if (isControlled) {
+      const seat = seats.find((s) => s.ticketControlNumber === num);
+      seatNumber = seat?.seatNumber;
+    }
+
     tickets.push({
       ticketId: crypto.randomUUID(),
       scheduleId,
       controlNumber: num,
+      seatNumber: isControlled ? seatNumber : undefined,
       ticketPrice: 0,
       isComplimentary: true,
     });
   }
 
-  await prisma.ticket.createMany({
-    data: tickets,
-  });
+  await tx.ticket.createMany({ data: tickets });
+};
 
-  return { created: tickets.length };
+export const generateSeats = async ({ tx, seats, schedId }) => {
+  await tx.showseats.createMany({
+    data: seats.map((s) => ({
+      scheduleId: schedId,
+      seatNumber: s.seatNumber,
+      seatSection: s.section,
+      x: s.x,
+      y: s.y,
+    })),
+  });
 };
 
 export const getShowSchedules = async (showId) => {

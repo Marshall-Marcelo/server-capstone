@@ -192,9 +192,9 @@ model showseats {
   scheduleId    String                @db.VarChar(36)
   seatNumber    String                @db.VarChar(10)
   seatSection   showseats_seatSection
-  seatPosition  Json
   status        showseats_status?     @default(available)
-  price         Decimal               @db.Decimal(10, 2)
+  x             Float                 @db.Float
+  y             Float                 @db.Float
   showschedules showschedules         @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, map: "showseats_ibfk_1")
 
   @@id([scheduleId, seatNumber])
@@ -202,7 +202,7 @@ model showseats {
 
 model ticket {
   ticketId           String             @id @db.VarChar(36)
-  controlNumber      Int                @unique(map: "controlNumber")
+  controlNumber      Int
   scheduleId         String             @db.VarChar(36)
   discountPercentage Decimal?           @db.Decimal(5, 2)
   status             ticket_status      @default(not_allocated)
@@ -280,15 +280,6 @@ enum ticket_status {
   allocated
 }
 
-enum showseats_seatSection {
-  orchestra_left
-  orchestra_right
-  orchestra_center
-  balcony_left
-  balcony_right
-  balcony_center
-}
-
 enum reservations_status {
   pending
   verified
@@ -308,4 +299,13 @@ enum showschedules_seatingType {
 enum showschedules_ticketType {
   ticketed
   nonTicketed
+}
+
+enum showseats_seatSection {
+  orchestraLeft
+  orchestraRight
+  orchestraMiddle
+  balconyLeft
+  balconyRight
+  balconyMiddle
 }
