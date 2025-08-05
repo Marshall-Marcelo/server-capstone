@@ -8,6 +8,7 @@ import { router as departmentRoute } from "./routes/department.route.js";
 import { router as showRoute } from "./routes/show.route.js";
 import { router as scheduleRoute } from "./routes/schedule.route.js";
 import { router as genresRoute } from "./routes/genres.route.js";
+import { router as customerRoutes } from "./routes/customer.route.js";
 
 import { errorHandler } from "./middleware/errorHandler.middleware.js";
 
@@ -32,6 +33,7 @@ app.use("/api/department", departmentRoute);
 app.use("/api/show", showRoute);
 app.use("/api/schedule", scheduleRoute);
 app.use("/api/genres", genresRoute);
+app.use("/api/customer", customerRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello ESM!");
