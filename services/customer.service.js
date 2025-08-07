@@ -1,7 +1,7 @@
 import prisma from "../utils/primsa.connection.js";
 
 export const getAllShowsForMenu = async () => {
-  const shows = await prisma.shows.findMany({
+  return await prisma.shows.findMany({
     where: {
       isArchived: false,
     },
@@ -10,28 +10,29 @@ export const getAllShowsForMenu = async () => {
       title: true,
       departmentId: true,
       showCover: true,
+      showType: true,
     },
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  return { shows };
+  // return { shows };
 };
 
 export const getDepartmentsForMenu = async () => {
-  const departments = await prisma.department.findMany({
+  return await prisma.department.findMany({
     select: {
       departmentId: true,
       name: true,
     },
   });
 
-  return { departments };
+  // return { departments }
 };
 
 export const getSelectedShowDetails = async ({ showId }) => {
-  const selectedShow = await prisma.shows.findUnique({
+  return await prisma.shows.findUnique({
     where: { showId },
     select: {
       title: true,
@@ -53,7 +54,7 @@ export const getSelectedShowDetails = async ({ showId }) => {
     },
   });
 
-  return { selectedShow };
+  // return { selectedShow };
 };
 
 export const getSelectedShowSeats = async () => {};
