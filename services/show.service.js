@@ -44,15 +44,16 @@ export const getShows = async ({ departmentId, showType, isArchived = false }) =
 
   const shows = await prisma.shows.findMany({
     where,
-    select: {
-      showId: true,
-      showType: true,
-      title: true,
-      showCover: true,
-      department: {
-        select: {
-          name: true,
-          departmentId: true,
+    include: {
+      showschedules: true,
+      department: true,
+      showgenre: {
+        include: {
+          genre_showgenre_genreTogenre: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },
@@ -61,7 +62,12 @@ export const getShows = async ({ departmentId, showType, isArchived = false }) =
     },
   });
 
-  return { shows };
+  const transformedShows = shows.map(({ showgenre, ...rest }) => ({
+    ...rest,
+    genreNames: showgenre.map((g) => g.genre_showgenre_genreTogenre.name),
+  }));
+
+  return { shows: transformedShows };
 };
 
 export const getShow = async ({ id }) => {
