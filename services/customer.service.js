@@ -31,7 +31,7 @@ export const getDepartmentsForMenu = async () => {
   // return { departments }
 };
 
-export const getSelectedShowDetails = async ({ showId }) => {
+export const getSelectedShowDetails = async (showId) => {
   return await prisma.shows.findUnique({
     where: { showId },
     select: {
@@ -39,16 +39,28 @@ export const getSelectedShowDetails = async ({ showId }) => {
       showCover: true,
       description: true,
       showgenre: {
-        select: { genre: true },
+        include: {
+          genre_showgenre_genreTogenre: {
+            select: {
+              name: true,
+            },
+          },
+        },
       },
       showschedules: {
-        where: {
-          isArchived: false,
-          isOpen: true,
-        },
+        // where: {
+        //   isArchived: false,
+        //   isOpen: true,
+        //   datetime: {
+        //     gte: new Date(),
+        //   },
+        // },
         select: {
           scheduleId: true,
           datetime: true,
+        },
+        orderBy: {
+          datetime: "asc",
         },
       },
     },
