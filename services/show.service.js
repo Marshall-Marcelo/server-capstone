@@ -35,6 +35,45 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
   return newShow;
 };
 
+export const updateShow = async ({ showId, showTitle, coverImage, description, department, genre = [], createdBy, showType }) => {
+  return await prisma.$transaction(async (tx) => {
+    await tx.shows.update({
+      where: { showId },
+      data: {
+        title: showTitle,
+        description,
+        showType,
+        departmentId: department,
+        ...(coverImage && { showCover: coverImage }), // only update if provided
+      },
+    });
+
+    //  Remove existing genres
+    await tx.showgenre.deleteMany({
+      where: { showId },
+    });
+
+    // Add updated genres with connectOrCreate
+    for (const name of genre) {
+      await tx.showgenre.create({
+        data: {
+          shows: {
+            connect: { showId },
+          },
+          genre_showgenre_genreTogenre: {
+            connectOrCreate: {
+              where: { name: name.trim() },
+              create: { name: name.trim() },
+            },
+          },
+        },
+      });
+    }
+
+    return true;
+  });
+};
+
 export const getShows = async ({ departmentId, showType, isArchived = false }) => {
   const where = {
     ...(departmentId && { departmentId }),

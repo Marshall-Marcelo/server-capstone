@@ -6,10 +6,11 @@ import {
   getShowsController,
   unArchiveShowController,
   getArchivedShowsController,
+  updateShowController,
 } from "../controller/show.controller.js";
 import { requireRole, verifyAuth } from "../middleware/auth.middleware.js";
 import upload from "../utils/upload.js";
-import { uploadMediaMiddleware } from "../middleware/uploadMedia.middleware.js";
+import { updateWithReplace, uploadMediaMiddleware } from "../middleware/uploadMedia.middleware.js";
 
 export const router = express.Router();
 
@@ -21,3 +22,5 @@ router.post("/delete", verifyAuth, requireRole("head", "trainer"), unArchiveShow
 router.get("/:id", verifyAuth, getShowController);
 router.get("/", verifyAuth, getShowsController);
 router.get("/archived", getArchivedShowsController);
+
+router.patch("/", verifyAuth, requireRole("head", "trainer"), upload.single("image"), updateWithReplace, updateShowController);

@@ -1,6 +1,6 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { archiveShow, createShow, deleteShow, doesShowExist, getShow, getShows, unArchiveShow } from "../services/show.service.js";
+import { archiveShow, createShow, deleteShow, doesShowExist, getShow, getShows, unArchiveShow, updateShow } from "../services/show.service.js";
 
 export const createShowController = asyncHandler(async (req, res, next) => {
   const { showTitle, description, department, genre, createdBy, showType } = req.body;
@@ -18,6 +18,34 @@ export const createShowController = asyncHandler(async (req, res, next) => {
 
   const newShow = await createShow({ showTitle, coverImage: imageUrl, description, department, genre: cleanedGenres, createdBy, showType });
   res.status(HttpStatusCodes.Created).json({ message: "Show Created", newShow });
+});
+
+export const updateShowController = asyncHandler(async (req, res, next) => {
+  const { showId, showTitle, description, department, genre, createdBy, showType } = req.body;
+
+  const { imageUrl } = req;
+
+  if (!showTitle || !description || !department || !genre || !createdBy || !showType) {
+    throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
+  }
+
+  const cleanedGenres = genre
+    .split(",")
+    .map((g) => g.trim())
+    .filter((g) => g !== "");
+
+  await updateShow({
+    showId,
+    showTitle,
+    coverImage: imageUrl,
+    description,
+    department,
+    genre: cleanedGenres,
+    createdBy,
+    showType,
+  });
+
+  res.status(HttpStatusCodes.Created).json({ message: "Updated Show" });
 });
 
 export const getShowController = asyncHandler(async (req, res, next) => {
