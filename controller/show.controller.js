@@ -5,9 +5,11 @@ import { archiveShow, createShow, deleteShow, doesShowExist, getShow, getShows, 
 export const createShowController = asyncHandler(async (req, res, next) => {
   const { showTitle, description, department, genre, createdBy, showType } = req.body;
 
+  console.log(req.body);
+
   const { imageUrl } = req;
 
-  if (!showTitle || !description || !department || !genre || !createdBy || !showType) {
+  if (!showTitle || !description || !genre || !createdBy || !showType) {
     throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
   }
 
@@ -25,7 +27,7 @@ export const updateShowController = asyncHandler(async (req, res, next) => {
 
   const { imageUrl } = req;
 
-  if (!showTitle || !description || !department || !genre || !createdBy || !showType) {
+  if (!showTitle || !description || !genre || !createdBy || !showType) {
     throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
   }
 

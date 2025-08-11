@@ -16,7 +16,7 @@ export const createShow = async ({ showTitle, coverImage, description, departmen
       title: showTitle,
       description,
       showType,
-      departmentId: department,
+      ...(department && { departmentId: department }),
       createdBy,
       showCover: coverImage,
       showgenre: {
@@ -76,9 +76,10 @@ export const updateShow = async ({ showId, showTitle, coverImage, description, d
 
 export const getShows = async ({ departmentId, showType, isArchived = false }) => {
   const where = {
-    ...(departmentId && { departmentId }),
-    ...(showType ? { showType } : { showType: { in: ["majorConcert", "showCase"] } }),
     isArchived,
+    ...(departmentId && {
+      OR: [{ departmentId }, { departmentId: null }],
+    }),
   };
 
   const shows = await prisma.shows.findMany({
