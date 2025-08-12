@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "./generated/prisma"
 }
 
 datasource db {
@@ -150,13 +149,13 @@ model shows {
   title         String          @db.VarChar(255)
   description   String          @db.Text
   showType      shows_showType
-  departmentId  String          @db.VarChar(36)
+  departmentId  String?         @db.VarChar(36)
   createdBy     String          @db.VarChar(36)
   createdAt     DateTime        @default(now()) @db.Timestamp(0)
   isArchived    Boolean         @default(false)
   showCover     String          @db.Text
   showgenre     showgenre[]
-  department    department      @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade, map: "shows_ibfk_1")
+  department    department?     @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade, map: "shows_ibfk_1")
   users         users           @relation(fields: [createdBy], references: [userId], map: "shows_ibfk_2")
   showschedules showschedules[]
 

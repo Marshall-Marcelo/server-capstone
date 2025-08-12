@@ -1,5 +1,4 @@
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { showseats_seatSection } from "../prisma/generated/prisma/index.js";
 import prisma from "../utils/primsa.connection.js";
 
 export const addShowSchedule = async ({
@@ -34,7 +33,10 @@ export const addShowSchedule = async ({
 
   if (conflicts.length > 0) {
     const conflictDetails = conflicts.map((s) => s.datetime.toISOString().replace("T", " ").slice(0, 16));
-    throw new AppError(`Conflicting schedules already exist for: ${conflictDetails.join(", ")}`, HttpStatusCodes.Conflict);
+    throw new AppError(
+      `Conflicting schedules already exist for: ${conflictDetails.join(", ")}`,
+      HttpStatusCodes.Conflict
+    );
   }
 
   await tx.showschedules.createMany({
@@ -47,7 +49,15 @@ export const addShowSchedule = async ({
   }));
 };
 
-export const generateScheduleTickets = async ({ tx, scheduleId, seatPricing, seats, ticketPrice, controlNumbers, seatingConfiguration }) => {
+export const generateScheduleTickets = async ({
+  tx,
+  scheduleId,
+  seatPricing,
+  seats,
+  ticketPrice,
+  controlNumbers,
+  seatingConfiguration,
+}) => {
   const tickets = [];
 
   const orchestra = controlNumbers?.orchestra || [];
