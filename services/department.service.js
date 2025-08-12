@@ -23,5 +23,29 @@ export const createDepartment = async ({ name }) => {
 };
 
 export const getDepartments = async () => {
-  return await prisma.department.findMany();
+  const departments = await prisma.department.findMany({
+    include: {
+      users: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+      _count: {
+        select: {
+          shows: true,
+        },
+      },
+    },
+  });
+
+  const result = departments.map((dep) => ({
+    departmentId: dep.departmentId,
+    name: dep.name,
+    trainerId: dep.trainerId,
+    trainerName: dep.users ? `${dep.users.firstName} ${dep.users.lastName}` : null,
+    totalShows: dep._count.shows,
+  }));
+
+  return result;
 };
