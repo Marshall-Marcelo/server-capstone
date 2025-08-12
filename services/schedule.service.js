@@ -1,5 +1,4 @@
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { showseats_seatSection } from "../prisma/generated/prisma/index.js";
 import prisma from "../utils/primsa.connection.js";
 
 export const addShowSchedule = async ({
