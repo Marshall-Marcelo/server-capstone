@@ -34,7 +34,7 @@ export const loginController = asyncHandler(async (req, res) => {
   res.cookie("authToken", generateToken({ userId: user.userId, userRole: user.role }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
   });
 
   const { department, distributor, ...userData } = user;
