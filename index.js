@@ -8,6 +8,7 @@ import { router as departmentRoute } from "./routes/department.route.js";
 import { router as showRoute } from "./routes/show.route.js";
 import { router as scheduleRoute } from "./routes/schedule.route.js";
 import { router as genresRoute } from "./routes/genres.route.js";
+import { router as accountsRoute } from "./routes/accounts.route.js";
 
 import { errorHandler } from "./middleware/errorHandler.middleware.js";
 
@@ -28,6 +29,7 @@ app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(cookieParser());
 
 app.use("/api/auth", authRoute);
+app.use("/api/accounts", accountsRoute);
 app.use("/api/department", departmentRoute);
 app.use("/api/show", showRoute);
 app.use("/api/schedule", scheduleRoute);

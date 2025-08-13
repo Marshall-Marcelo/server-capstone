@@ -37,6 +37,7 @@ model department {
   departmentId String        @id @db.VarChar(36)
   name         String        @unique(map: "name_UNIQUE") @db.VarChar(100)
   trainerId    String?       @db.VarChar(36)
+  logoUrl      String        @db.VarChar(225)
   users        users?        @relation(fields: [trainerId], references: [userId], onDelete: Restrict, map: "department_ibfk_1")
   distributor  distributor[]
   shows        shows[]

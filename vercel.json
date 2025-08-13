@@ -12,5 +12,8 @@
       "dest": "index.js"
     }
   ],
+  "github": {
+    "enabled": false
+  },
   "buildCommand": "npm install && prisma generate"
 }

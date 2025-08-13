@@ -34,7 +34,7 @@ export const loginController = asyncHandler(async (req, res) => {
   res.cookie("authToken", generateToken({ userId: user.userId, userRole: user.role }), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
 
   const { department, distributor, ...userData } = user;
@@ -52,57 +52,4 @@ export const getUserInformationController = asyncHandler(async (req, res, next) 
   const [userDistributor] = user.distributor;
 
   res.status(HttpStatusCodes.OK).json({ ...userData, department: userDepartment, distributor: userDistributor });
-});
-
-/**
- *
- * New CCA Account - (either Trainer or Head)
- *
- * type = trainer or head
- */
-export const createCCAController = asyncHandler(async (req, res, next) => {
-  const { firstName, lastName, email, password, type } = req.body;
-
-  if (!firstName || !lastName || !email || !password || !type) {
-    throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
-  }
-
-  const emailCheck = validateEmail({ requiredDomain: "@slu.edu.ph", email });
-
-  if (!emailCheck.valid) {
-    throw new AppError(emailCheck.message, HttpStatusCodes.BadRequest);
-  }
-
-  const newTrainer = await createAccount({ firstName, lastName, userType: type, email, password });
-  res.status(HttpStatusCodes.Created).json({ message: "CCA Account Create Successfully", newTrainer });
-});
-
-export const createDistributorAccountController = asyncHandler(async (req, res, next) => {
-  console.log(req.body);
-  const { firstName, lastName, email, password, distributorType, contactNumber, departmentId } = req.body;
-
-  if (!firstName || !lastName || !email || !password || !distributorType || !contactNumber) {
-    throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
-  }
-
-  let emailCheck;
-
-  // CCA Member type ID on the database
-  if (distributorType == 2) {
-    emailCheck = validateEmail({ requiredDomain: "@slu.edu.ph", email });
-
-    if (!departmentId) {
-      throw new AppError("Please specify department for a CCA Member type of distributor", HttpStatusCodes.BadRequest);
-    }
-  } else {
-    emailCheck = validateEmail({ email });
-  }
-
-  if (!emailCheck.valid) {
-    throw new AppError(emailCheck.message, HttpStatusCodes.BadRequest);
-  }
-
-  const newAccount = await createDistributorAccount({ firstName, lastName, email, password, distributorType, contactNumber, departmentId });
-
-  res.status(HttpStatusCodes.Created).json({ message: "Distributor Account Successfully Created", newAccount });
 });
