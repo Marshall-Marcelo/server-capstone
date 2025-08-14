@@ -1,6 +1,12 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { createDepartment, deleteDepartment, getDepartments, updateDepartment } from "../services/department.service.js";
+import {
+  createDepartment,
+  deleteDepartment,
+  getDepartments,
+  removeDepartmentTrainerByTrainerId,
+  updateDepartment,
+} from "../services/department.service.js";
 import { storage } from "../utils/appwriteconfig.js";
 import { getFileId } from "../utils/general.utils.js";
 
@@ -37,4 +43,16 @@ export const editDepartmentController = asyncHandler(async (req, res, next) => {
 
   await updateDepartment({ departmentId, name, logoUrl: imageUrl });
   res.json({ message: "Updated" });
+});
+
+export const removeDepartmentTrainerController = asyncHandler(async (req, res, next) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    throw new AppError("Missing Post Fields", HttpStatusCodes.BadRequest);
+  }
+
+  await removeDepartmentTrainerByTrainerId(userId);
+
+  res.json({ message: "Removed" });
 });

@@ -1,7 +1,9 @@
+import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
 import prisma from "../utils/primsa.connection.js";
+import { checkEmailExistence } from "./auth.service.js";
 
 export const getTrainers = async () => {
-  const trainers = await prisma.users.findMany({
+  return await prisma.users.findMany({
     where: { role: "trainer" },
     include: {
       department: {
@@ -12,17 +14,12 @@ export const getTrainers = async () => {
       },
     },
   });
-
-  return trainers.map((t) => ({
-    ...t,
-    department: t.department?.[0] || null,
-  }));
 };
 
 export const editAccount = async ({ userId, firstName, lastName, email }) => {
   const user = await checkEmailExistence(email);
 
-  if (user) {
+  if (user && user.userId !== userId) {
     throw new AppError("Email already used", HttpStatusCodes.Conflict);
   }
 

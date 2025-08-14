@@ -70,8 +70,22 @@ export const updateDepartment = async ({ departmentId, name, logoUrl }) => {
   });
 };
 
-export const assignDepartmentTrainer = async ({ departmentId, trainerId }) => {
-  const department = await prisma.department.findUnique({ where: { departmentId } });
+export const removeDepartmentTrainer = async (departmentId, tx = prisma) => {
+  return await tx.department.update({
+    where: { departmentId },
+    data: { trainerId: null },
+  });
+};
+
+export const removeDepartmentTrainerByTrainerId = async (trainerId, tx = prisma) => {
+  return await tx.department.updateMany({
+    where: { trainerId },
+    data: { trainerId: null },
+  });
+};
+
+export const assignDepartmentTrainer = async ({ departmentId, trainerId, tx = prisma }) => {
+  const department = await tx.department.findUnique({ where: { departmentId } });
 
   if (!department) {
     throw new AppError("Department not found", HttpStatusCodes.NotFound);
@@ -81,5 +95,5 @@ export const assignDepartmentTrainer = async ({ departmentId, trainerId }) => {
     throw new AppError("The Department already have trainer", HttpStatusCodes.BadRequest);
   }
 
-  return await prisma.department.update({ where: { departmentId }, data: { trainerId } });
+  return await tx.department.update({ where: { departmentId }, data: { trainerId } });
 };

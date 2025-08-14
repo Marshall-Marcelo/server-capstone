@@ -2,7 +2,8 @@ import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
 import { editAccount, getTrainers } from "../services/accounts.service.js";
 import { createAccount } from "../services/auth.service.js";
-import { assignDepartmentTrainer } from "../services/department.service.js";
+import { assignDepartmentTrainer, removeDepartmentTrainer, removeDepartmentTrainerByTrainerId } from "../services/department.service.js";
+import prisma from "../utils/primsa.connection.js";
 import { validateEmail } from "../utils/validators.js";
 
 export const getTrainersController = asyncHandler(async (req, res, next) => {
@@ -48,7 +49,11 @@ export const editTrainerAccountController = asyncHandler(async (req, res, next) 
   await editAccount({ userId, firstName, lastName, email });
 
   if (departmentId) {
-    await assignDepartmentTrainer({ departmentId, trainerId: userId });
+    await prisma.$transaction(async (tx) => {
+      await removeDepartmentTrainerByTrainerId(userId, tx);
+
+      await assignDepartmentTrainer({ departmentId, trainerId: userId, tx });
+    });
   }
 
   res.status(HttpStatusCodes.Created).json({ message: "Trainer Account Edited" });
@@ -100,3 +105,5 @@ export const createDistributorAccountController = asyncHandler(async (req, res, 
 
   res.status(HttpStatusCodes.Created).json({ message: "Distributor Account Successfully Created", newAccount });
 });
+
+export const archiveAccountController = asyncHandler(async (req, res, next) => {});

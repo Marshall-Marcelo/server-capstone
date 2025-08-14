@@ -5,8 +5,6 @@ import { archiveShow, createShow, deleteShow, doesShowExist, getShow, getShows, 
 export const createShowController = asyncHandler(async (req, res, next) => {
   const { showTitle, description, department, genre, createdBy, showType } = req.body;
 
-  console.log(req.body);
-
   const { imageUrl } = req;
 
   if (!showTitle || !description || !genre || !createdBy || !showType) {
