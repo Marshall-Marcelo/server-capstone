@@ -1,6 +1,6 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { login, createAccount, createDistributorAccount, getUser } from "../services/auth.service.js";
+import { login, getUser } from "../services/auth.service.js";
 import { generateToken } from "../utils/token.utils.js";
 import { validateEmail } from "../utils/validators.js";
 

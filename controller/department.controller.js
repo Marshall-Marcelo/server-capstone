@@ -28,7 +28,9 @@ export const deleteDepartmentController = asyncHandler(async (req, res, next) =>
   const { id } = req.params;
   const dep = await deleteDepartment(id);
 
-  await storage.deleteFile(process.env.APP_WRITE_BUCKET_ID, getFileId(dep.logoUrl));
+  if (dep) {
+    await storage.deleteFile(process.env.APP_WRITE_BUCKET_ID, getFileId(dep.logoUrl));
+  }
 
   res.json({ message: "Deleted" });
 });
