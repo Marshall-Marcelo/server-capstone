@@ -25,6 +25,7 @@ export const getDepartmentsForMenu = async () => {
     select: {
       departmentId: true,
       name: true,
+      logoUrl: true,
     },
   });
 
