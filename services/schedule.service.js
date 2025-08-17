@@ -206,3 +206,13 @@ export const getScheduleSummary = async (scheduleId) => {
     pendingRemittance,
   };
 };
+
+export const getScheduleTickets = async (scheduleId) => {
+  const tickets = await prisma.ticket.findMany({
+    where: { scheduleId },
+    orderBy: {
+      controlNumber: "asc",
+    },
+  });
+  return tickets;
+};

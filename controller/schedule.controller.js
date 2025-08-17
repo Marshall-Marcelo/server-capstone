@@ -6,6 +6,7 @@ import {
   generateSeats,
   getScheduleDetails,
   getScheduleSummary,
+  getScheduleTickets,
   getShowSchedules,
 } from "../services/schedule.service.js";
 import { doesShowExist } from "../services/show.service.js";
@@ -22,7 +23,7 @@ export const getShowSchedulesController = asyncHandler(async (req, res) => {
   }
 
   const schedules = await getShowSchedules(showId);
-  res.json({ schedules });
+  res.json(schedules);
 });
 
 export const addShowScheduleController = asyncHandler(async (req, res) => {
@@ -102,4 +103,10 @@ export const getScheudleSummaryController = asyncHandler(async (req, res, nexr) 
   const summary = await getScheduleSummary(scheduleId);
 
   res.json(summary);
+});
+
+export const getScheduleTicketsController = asyncHandler(async (req, res, next) => {
+  const { scheduleId } = req.params;
+  const tickets = await getScheduleTickets(scheduleId);
+  res.json(tickets);
 });

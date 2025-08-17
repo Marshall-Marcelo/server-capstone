@@ -2,6 +2,7 @@ import express from "express";
 import {
   addShowScheduleController,
   getScheduleInfoController,
+  getScheduleTicketsController,
   getScheudleSummaryController,
   getShowSchedulesController,
 } from "../controller/schedule.controller.js";
@@ -15,3 +16,4 @@ router.get("/", verifyAuth, requireRole("head", "trainer"), getShowSchedulesCont
 
 router.get("/:scheduleId", verifyAuth, requireRole("head", "trainer"), getScheduleInfoController);
 router.get("/summary/:scheduleId", verifyAuth, requireRole("head", "trainer"), getScheudleSummaryController);
+router.get("/tickets/:scheduleId", verifyAuth, requireRole("head", "trainer"), getScheduleTicketsController);
