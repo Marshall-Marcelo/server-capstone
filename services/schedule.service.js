@@ -56,7 +56,8 @@ export const generateScheduleTickets = async ({ tx, scheduleId, seatPricing, sea
   const isControlled = seatingConfiguration === "controlledSeating";
   const isFixedPrice = seatPricing === "fixed";
 
-  for (const num of [...orchestra, ...balcony]) {
+  // Orchestra tickets
+  for (const num of orchestra) {
     let seatNumber;
     let price = ticketPrice;
 
@@ -73,9 +74,33 @@ export const generateScheduleTickets = async ({ tx, scheduleId, seatPricing, sea
       seatNumber: isControlled ? seatNumber : undefined,
       ticketPrice: isFixedPrice ? ticketPrice : price,
       isComplimentary: false,
+      ticketSection: "orchestra",
     });
   }
 
+  // Balcony tickets
+  for (const num of balcony) {
+    let seatNumber;
+    let price = ticketPrice;
+
+    if (isControlled) {
+      const seat = seats.find((s) => s.ticketControlNumber === num);
+      seatNumber = seat?.seatNumber;
+      if (!isFixedPrice) price = seat?.ticketPrice;
+    }
+
+    tickets.push({
+      ticketId: crypto.randomUUID(),
+      scheduleId,
+      controlNumber: num,
+      seatNumber: isControlled ? seatNumber : undefined,
+      ticketPrice: isFixedPrice ? ticketPrice : price,
+      isComplimentary: false,
+      ticketSection: "balcony",
+    });
+  }
+
+  // Complimentary tickets (no ticketSection)
   for (const num of complimentary) {
     let seatNumber;
 
@@ -91,6 +116,7 @@ export const generateScheduleTickets = async ({ tx, scheduleId, seatPricing, sea
       seatNumber: isControlled ? seatNumber : undefined,
       ticketPrice: 0,
       isComplimentary: true,
+      ticketSection: null,
     });
   }
 
@@ -111,4 +137,72 @@ export const generateSeats = async ({ tx, seats, schedId }) => {
 
 export const getShowSchedules = async (showId) => {
   return await prisma.showschedules.findMany({ where: { showId } });
+};
+
+export const getScheduleDetails = async (scheduleId) => {
+  return await prisma.showschedules.findUnique({ where: { scheduleId } });
+};
+
+export const getScheduleSummary = async (scheduleId) => {
+  const expected = await prisma.ticket.aggregate({
+    where: { scheduleId, isComplimentary: false },
+    _sum: { ticketPrice: true },
+  });
+
+  const current = await prisma.ticket.aggregate({
+    where: { scheduleId, status: "sold", isComplimentary: false },
+    _sum: { ticketPrice: true },
+  });
+
+  const totalTicket = await prisma.ticket.count({
+    where: { scheduleId },
+  });
+
+  const totalOrchestra = await prisma.ticket.count({
+    where: { scheduleId, ticketSection: "orchestra" },
+  });
+
+  const totalBalcony = await prisma.ticket.count({
+    where: { scheduleId, ticketSection: "balcony" },
+  });
+
+  const totalComplimentary = await prisma.ticket.count({
+    where: { scheduleId, isComplimentary: true },
+  });
+
+  const sold = await prisma.ticket.count({
+    where: { scheduleId, status: "sold", isComplimentary: false },
+  });
+
+  const notAllocated = await prisma.ticket.count({
+    where: { scheduleId, status: "not_allocated" },
+  });
+
+  const unsold = await prisma.ticket.count({
+    where: { scheduleId, status: "allocated" },
+  });
+
+  const pendingRemittance = await prisma.ticket.count({
+    where: {
+      scheduleId,
+      status: "sold",
+      remittedtickets: { none: {} },
+    },
+  });
+
+  return {
+    expectedSales: expected._sum.ticketPrice || 0,
+    currentSales: current._sum.ticketPrice || 0,
+    remainingSales: (expected._sum.ticketPrice || 0) - (current._sum.ticketPrice || 0),
+
+    totalTicket,
+    totalOrchestra,
+    totalBalcony,
+    totalComplimentary,
+
+    sold,
+    notAllocated,
+    unsold,
+    pendingRemittance,
+  };
 };

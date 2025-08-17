@@ -201,20 +201,21 @@ model showseats {
 }
 
 model ticket {
-  ticketId           String             @id @db.VarChar(36)
+  ticketId           String                @id @db.VarChar(36)
   controlNumber      Int
-  scheduleId         String             @db.VarChar(36)
-  discountPercentage Decimal?           @db.Decimal(5, 2)
-  status             ticket_status      @default(not_allocated)
-  seatNumber         String?            @db.VarChar(10)
-  distributorId      String?            @db.VarChar(36)
-  isComplimentary    Boolean?           @default(false)
-  ticketPrice        Decimal?           @db.Decimal(10, 2)
+  scheduleId         String                @db.VarChar(36)
+  discountPercentage Decimal?              @db.Decimal(5, 2)
+  status             ticket_status         @default(not_allocated)
+  seatNumber         String?               @db.VarChar(10)
+  distributorId      String?               @db.VarChar(36)
+  isComplimentary    Boolean?              @default(false)
+  ticketPrice        Decimal?              @db.Decimal(10, 2)
+  ticketSection      ticket_ticketSection?
   allocatedtickets   allocatedtickets[]
   remittedtickets    remittedtickets[]
   reservedtickets    reservedtickets[]
-  showschedules      showschedules      @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, map: "ticket_ibfk_1")
-  users              users?             @relation(fields: [distributorId], references: [userId], onDelete: Restrict, map: "ticket_ibfk_2")
+  showschedules      showschedules         @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade, map: "ticket_ibfk_1")
+  users              users?                @relation(fields: [distributorId], references: [userId], onDelete: Restrict, map: "ticket_ibfk_2")
 
   @@index([distributorId], map: "distributorId")
   @@index([scheduleId], map: "ticket_ibfk_1_idx")
@@ -308,4 +309,9 @@ enum showseats_seatSection {
   balconyLeft
   balconyRight
   balconyMiddle
+}
+
+enum ticket_ticketSection {
+  orchestra
+  balcony
 }

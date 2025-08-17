@@ -1,6 +1,13 @@
 import { asyncHandler } from "../middleware/asyncHandler.middleware.js";
 import { AppError, HttpStatusCodes } from "../middleware/errorHandler.middleware.js";
-import { addShowSchedule, generateScheduleTickets, generateSeats, getShowSchedules } from "../services/schedule.service.js";
+import {
+  addShowSchedule,
+  generateScheduleTickets,
+  generateSeats,
+  getScheduleDetails,
+  getScheduleSummary,
+  getShowSchedules,
+} from "../services/schedule.service.js";
 import { doesShowExist } from "../services/show.service.js";
 import { convertDates } from "../utils/convert.utils.js";
 import prisma from "../utils/primsa.connection.js";
@@ -82,4 +89,17 @@ export const addShowScheduleController = asyncHandler(async (req, res) => {
     default:
       throw new AppError("Invalid Ticket Type Value", HttpStatusCodes.BadRequest);
   }
+});
+
+export const getScheduleInfoController = asyncHandler(async (req, res, next) => {
+  const { scheduleId } = req.params;
+  const details = await getScheduleDetails(scheduleId);
+  res.json(details);
+});
+
+export const getScheudleSummaryController = asyncHandler(async (req, res, nexr) => {
+  const { scheduleId } = req.params;
+  const summary = await getScheduleSummary(scheduleId);
+
+  res.json(summary);
 });
